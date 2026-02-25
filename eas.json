@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 16.0.0"
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -12,18 +13,23 @@
     },
     "preview": {
       "distribution": "internal",
-      "ios": {
-        "simulator": false
-      }
+      "credentialsSource": "local"
     },
     "production": {
       "autoIncrement": true,
+      "credentialsSource": "local",
       "ios": {
         "buildConfiguration": "Release"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "./AuthKey_462PC8YWB4.p8",
+        "ascApiKeyId": "462PC8YWB4",
+        "ascApiKeyIssuerId": "302353eb-6343-4880-b78a-5c9e21fcdf60"
+      }
+    }
   }
 }

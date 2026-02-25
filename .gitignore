@@ -13,10 +13,10 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
-*.p8
-*.p12
 *.key
-*.mobileprovision
+
+# Certs kept for EAS local credentials (private repo only)
+# *.p8, *.p12, *.mobileprovision intentionally included
 
 # Metro
 .metro-health-check*
@@ -40,3 +40,4 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
