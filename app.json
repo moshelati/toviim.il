@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "תוביים.il",
+    "name": "תוביים",
     "slug": "toviim-il",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,18 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "il.toviim.app"
+      "bundleIdentifier": "com.mosheyakir.toviim",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "האפליקציה צולמת תמונות כראיות לתביעה שלך",
+        "NSPhotoLibraryUsageDescription": "האפליקציה ניגשת לגלריה כדי לצרף תמונות כראיות לתביעה שלך",
+        "NSPhotoLibraryAddUsageDescription": "האפליקציה שומרת מסמכים לגלריה שלך",
+        "NSMicrophoneUsageDescription": "נדרש גישה למיקרופון לצילום וידאו כראיה",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleAllowMixedLocalizations": true,
+        "CFBundleDevelopmentRegion": "he",
+        "CFBundleLocalizations": ["he", "en"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,14 +34,35 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "il.toviim.app"
+      "package": "com.mosheyakir.toviim"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-image-picker",
-      "expo-document-picker"
-    ]
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "האפליקציה ניגשת לגלריה כדי לצרף תמונות כראיות לתביעה שלך",
+          "cameraPermission": "האפליקציה צולמת תמונות כראיות לתביעה שלך",
+          "microphonePermission": false
+        }
+      ],
+      "expo-document-picker",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }
