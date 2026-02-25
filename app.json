@@ -24,7 +24,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleAllowMixedLocalizations": true,
         "CFBundleDevelopmentRegion": "he",
-        "CFBundleLocalizations": ["he", "en"]
+        "CFBundleLocalizations": [
+          "he",
+          "en"
+        ]
       }
     },
     "android": {
@@ -61,8 +64,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "6fe90fb8-43c9-4fbf-8b53-150b5cc7060c"
       }
-    }
+    },
+    "owner": "moseslati"
   }
 }
