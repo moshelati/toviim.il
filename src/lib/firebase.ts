@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   initializeAuth,
   getAuth,
+  // @ts-ignore — exported from RN bundle but missing from TS types (Firebase SDK issue #8332)
   getReactNativePersistence,
   browserLocalPersistence,
 } from 'firebase/auth';

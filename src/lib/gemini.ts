@@ -13,7 +13,7 @@ export interface GeminiMessage {
 
 export interface StructuredClaimData {
   factsSummary: string;
-  timeline: { date: string; event: string }[];
+  timeline: { date: string; event?: string; description?: string }[];
   demands: string[];
   missingFields: string[];
   evidenceNeeded: string[];

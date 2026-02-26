@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { Colors, Spacing, Radius, Typography, Shadows, CARD_PADDING } from '../../theme';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   /** If provided, card becomes pressable */
   onPress?: () => void;
   /** Remove padding */
