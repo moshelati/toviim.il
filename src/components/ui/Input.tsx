@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { COLORS, RADIUS, SPACING } from '../../constants/theme';
+import { Colors, Radius, Spacing, Typography } from '../../theme';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -39,7 +39,7 @@ export function Input({
       ]}>
         <TextInput
           style={[styles.input, style]}
-          placeholderTextColor={COLORS.gray[400]}
+          placeholderTextColor={Colors.gray400}
           textAlign="right"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -59,21 +59,21 @@ export function Input({
 }
 
 const styles = StyleSheet.create({
-  wrapper:    { marginBottom: SPACING.md },
-  label:      { fontSize: 14, fontWeight: '500', color: COLORS.gray[700], marginBottom: 6, textAlign: 'right' },
+  wrapper:    { marginBottom: Spacing.md },
+  label:      { ...Typography.small, fontWeight: '500', color: Colors.gray700, marginBottom: 6, textAlign: 'right' },
   container:  {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.gray[200],
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.gray[50],
-    paddingHorizontal: SPACING.md,
+    borderColor: Colors.gray200,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.gray50,
+    paddingHorizontal: Spacing.base,
   },
-  focused:    { borderColor: COLORS.primary[500], backgroundColor: COLORS.white },
-  errored:    { borderColor: COLORS.danger },
-  input:      { flex: 1, fontSize: 15, color: COLORS.gray[800], paddingVertical: SPACING.sm + 4, minHeight: 48 },
-  iconWrap:   { marginLeft: SPACING.sm },
-  error:      { fontSize: 12, color: COLORS.danger, marginTop: 4, textAlign: 'right' },
-  hint:       { fontSize: 12, color: COLORS.gray[400], marginTop: 4, textAlign: 'right' },
+  focused:    { borderColor: Colors.primary, backgroundColor: Colors.white },
+  errored:    { borderColor: Colors.danger },
+  input:      { flex: 1, ...Typography.bodyMedium, color: Colors.gray800, paddingVertical: Spacing.sm + 4, minHeight: 48 },
+  iconWrap:   { marginLeft: Spacing.sm },
+  error:      { ...Typography.tiny, color: Colors.danger, marginTop: 4, textAlign: 'right' },
+  hint:       { ...Typography.tiny, color: Colors.gray400, marginTop: 4, textAlign: 'right' },
 });

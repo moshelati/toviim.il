@@ -6,34 +6,37 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { AppHeader } from '../../components/ui/AppHeader';
+import { BottomSheet } from '../../components/ui/BottomSheet';
 import { useAuth } from '../../context/AuthContext';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '../../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [errors,   setErrors]   = useState<Record<string,string>>({});
+  const [errorSheet, setErrorSheet] = useState(false);
+  const [errorMsg,   setErrorMsg]   = useState('');
 
   function validate(): boolean {
     const e: Record<string,string> = {};
-    if (!email.includes('@')) e.email    = 'כתובת מייל לא תקינה';
-    if (!password)             e.password = 'נא להזין סיסמה';
+    if (!email.includes('@')) e.email    = '\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC \u05DC\u05D0 \u05EA\u05E7\u05D9\u05E0\u05D4';
+    if (!password)             e.password = '\u05E0\u05D0 \u05DC\u05D4\u05D6\u05D9\u05DF \u05E1\u05D9\u05E1\u05DE\u05D4';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -44,48 +47,42 @@ export function LoginScreen({ navigation }: Props) {
     try {
       await signIn(email.trim().toLowerCase(), password);
     } catch (err: any) {
-      let msg = 'פרטי הכניסה שגויים. נסה/י שוב.';
-      if (err.code === 'auth/user-not-found')  msg = 'לא נמצא חשבון עם מייל זה.';
-      if (err.code === 'auth/wrong-password')  msg = 'הסיסמה שגויה.';
-      if (err.code === 'auth/too-many-requests') msg = 'נחסמת זמנית עקב ניסיונות רבים. נסה/י שוב מאוחר יותר.';
-      Alert.alert('שגיאת כניסה', msg);
+      let msg = '\u05E4\u05E8\u05D8\u05D9 \u05D4\u05DB\u05E0\u05D9\u05E1\u05D4 \u05E9\u05D2\u05D5\u05D9\u05D9\u05DD. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1.';
+      if (err.code === 'auth/user-not-found')    msg = '\u05DC\u05D0 \u05E0\u05DE\u05E6\u05D0 \u05D7\u05E9\u05D1\u05D5\u05DF \u05E2\u05DD \u05DE\u05D9\u05D9\u05DC \u05D6\u05D4.';
+      if (err.code === 'auth/wrong-password')    msg = '\u05D4\u05E1\u05D9\u05E1\u05DE\u05D4 \u05E9\u05D2\u05D5\u05D9\u05D4.';
+      if (err.code === 'auth/too-many-requests') msg = '\u05E0\u05D7\u05E1\u05DE\u05EA \u05D6\u05DE\u05E0\u05D9\u05EA \u05E2\u05E7\u05D1 \u05E0\u05D9\u05E1\u05D9\u05D5\u05E0\u05D5\u05EA \u05E8\u05D1\u05D9\u05DD. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1 \u05DE\u05D0\u05D5\u05D7\u05E8 \u05D9\u05D5\u05EA\u05E8.';
+      setErrorMsg(msg);
+      setErrorSheet(true);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      <AppHeader
+        title={'\u2696\uFE0F \u05EA\u05D5\u05D1\u05D9\u05D9\u05DD.il'}
+        onBack={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header with purple accent */}
-        <LinearGradient
-          colors={[COLORS.primary[600], COLORS.primary[500]]}
-          style={styles.topBanner}
-        >
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>→</Text>
-          </TouchableOpacity>
-          <Text style={styles.logoText}>⚖️ תוביים.il</Text>
-          <View style={{ width: 40 }} />
-        </LinearGradient>
-
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xxl }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>כניסה לחשבון</Text>
-          <Text style={styles.subtitle}>ברוך/ה הבא/ה חזרה</Text>
+          <Text style={styles.title}>{'\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
+          <Text style={styles.subtitle}>{'\u05D1\u05E8\u05D5\u05DA/\u05D4 \u05D4\u05D1\u05D0/\u05D4 \u05D7\u05D6\u05E8\u05D4'}</Text>
 
           <View style={styles.formCard}>
             <Input
-              label="כתובת מייל"
+              label={'\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC'}
               placeholder="example@email.com"
               value={email}
               onChangeText={setEmail}
@@ -96,23 +93,23 @@ export function LoginScreen({ navigation }: Props) {
               textContentType="emailAddress"
             />
             <Input
-              label="סיסמה"
-              placeholder="הסיסמה שלך"
+              label={'\u05E1\u05D9\u05E1\u05DE\u05D4'}
+              placeholder={'\u05D4\u05E1\u05D9\u05E1\u05DE\u05D4 \u05E9\u05DC\u05DA'}
               value={password}
               onChangeText={setPassword}
               error={errors.password}
               secureTextEntry={!showPw}
               textContentType="password"
-              rightIcon={<Text style={styles.eyeIcon}>{showPw ? '🙈' : '👁️'}</Text>}
+              rightIcon={<Text style={styles.eyeIcon}>{showPw ? '\uD83D\uDE48' : '\uD83D\uDC41\uFE0F'}</Text>}
               onRightIconPress={() => setShowPw(!showPw)}
             />
 
             <TouchableOpacity style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>שכחת סיסמה?</Text>
+              <Text style={styles.forgotText}>{'\u05E9\u05DB\u05D7\u05EA \u05E1\u05D9\u05E1\u05DE\u05D4?'}</Text>
             </TouchableOpacity>
 
             <Button
-              label="כניסה לחשבון"
+              label={'\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF'}
               onPress={handleLogin}
               size="lg"
               loading={loading}
@@ -122,72 +119,77 @@ export function LoginScreen({ navigation }: Props) {
 
           {/* Sign up link */}
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>עדיין אין לך חשבון? </Text>
+            <Text style={styles.signupText}>{'\u05E2\u05D3\u05D9\u05D9\u05DF \u05D0\u05D9\u05DF \u05DC\u05DA \u05D7\u05E9\u05D1\u05D5\u05DF? '}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.signupLink}>הרשמה חינם</Text>
+              <Text style={styles.signupLink}>{'\u05D4\u05E8\u05E9\u05DE\u05D4 \u05D7\u05D9\u05E0\u05DD'}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Security badge */}
           <View style={styles.securityBadge}>
-            <Text style={styles.securityText}>🔒 מאובטח עם Firebase Auth · SSL מוצפן</Text>
+            <Text style={styles.securityText}>{'\uD83D\uDD12 \u05DE\u05D0\u05D5\u05D1\u05D8\u05D7 \u05E2\u05DD Firebase Auth \u00B7 SSL \u05DE\u05D5\u05E6\u05E4\u05DF'}</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+
+      <BottomSheet
+        visible={errorSheet}
+        onClose={() => setErrorSheet(false)}
+        icon={'\u274C'}
+        title={'\u05E9\u05D2\u05D9\u05D0\u05EA \u05DB\u05E0\u05D9\u05E1\u05D4'}
+        body={errorMsg}
+        primaryLabel={'\u05E0\u05E1\u05D4 \u05E9\u05D5\u05D1'}
+        onPrimary={() => setErrorSheet(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: COLORS.gray[50] },
-  scroll: { flex: 1 },
-  scrollContent: { padding: SPACING.lg, paddingBottom: SPACING.xxl },
+  container: { flex: 1, backgroundColor: Colors.surface },
+  scroll:    { flex: 1 },
+  scrollContent: { padding: SCREEN_PADDING },
 
-  topBanner: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md + 4,
+  title: {
+    ...Typography.h2,
+    color: Colors.text,
+    textAlign: 'right',
+    marginTop: Spacing.xl,
   },
-  backBtn:  { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 20, color: COLORS.white },
-  logoText: { fontSize: 18, fontWeight: '700', color: COLORS.white },
-
-  title:    { fontSize: 28, fontWeight: '800', color: COLORS.gray[800], textAlign: 'right', marginTop: SPACING.lg },
-  subtitle: { fontSize: 15, color: COLORS.gray[500], textAlign: 'right', marginBottom: SPACING.xl },
+  subtitle: {
+    ...Typography.bodyMedium,
+    color: Colors.muted,
+    textAlign: 'right',
+    marginBottom: Spacing.xl,
+  },
 
   formCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-    marginBottom: SPACING.lg,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.xl,
+    padding: Spacing.xl,
+    marginBottom: Spacing.xl,
+    ...Shadows.md,
   },
 
   eyeIcon:   { fontSize: 18 },
-  forgotBtn: { alignSelf: 'flex-start', marginTop: -SPACING.xs, marginBottom: SPACING.md },
-  forgotText:{ fontSize: 13, color: COLORS.primary[600], fontWeight: '500' },
-  submitBtn: { marginTop: SPACING.xs },
+  forgotBtn: { alignSelf: 'flex-start', marginTop: -Spacing.xs, marginBottom: Spacing.md },
+  forgotText:{ ...Typography.caption, color: Colors.primary, fontWeight: '500' },
+  submitBtn: { marginTop: Spacing.xs },
 
   signupRow: {
     flexDirection: 'row-reverse',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: Spacing.xl,
   },
-  signupText: { fontSize: 14, color: COLORS.gray[500] },
-  signupLink: { fontSize: 14, color: COLORS.primary[600], fontWeight: '700' },
+  signupText: { ...Typography.small, color: Colors.muted },
+  signupLink: { ...Typography.small, color: Colors.primary, fontWeight: '700' },
 
   securityBadge: {
     alignItems: 'center',
-    padding: SPACING.sm,
-    backgroundColor: COLORS.gray[100],
-    borderRadius: RADIUS.md,
+    padding: Spacing.sm,
+    backgroundColor: Colors.gray100,
+    borderRadius: Radius.md,
   },
-  securityText: { fontSize: 12, color: COLORS.gray[500] },
+  securityText: { ...Typography.tiny, color: Colors.muted },
 });

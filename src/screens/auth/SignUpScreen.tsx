@@ -6,22 +6,24 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { AppHeader } from '../../components/ui/AppHeader';
+import { BottomSheet } from '../../components/ui/BottomSheet';
 import { useAuth } from '../../context/AuthContext';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, SCREEN_PADDING } from '../../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 export function SignUpScreen({ navigation }: Props) {
   const { signUp } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [name,     setName]     = useState('');
   const [email,    setEmail]    = useState('');
@@ -30,13 +32,15 @@ export function SignUpScreen({ navigation }: Props) {
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [errors,   setErrors]   = useState<Record<string,string>>({});
+  const [errorSheet, setErrorSheet] = useState(false);
+  const [errorMsg,   setErrorMsg]   = useState('');
 
   function validate(): boolean {
     const e: Record<string,string> = {};
-    if (!name.trim())                    e.name     = 'נא להזין שם מלא';
-    if (!email.includes('@'))            e.email    = 'כתובת מייל לא תקינה';
-    if (password.length < 8)             e.password = 'סיסמה חייבת להיות לפחות 8 תווים';
-    if (password !== confirm)            e.confirm  = 'הסיסמאות אינן תואמות';
+    if (!name.trim())                    e.name     = '\u05E0\u05D0 \u05DC\u05D4\u05D6\u05D9\u05DF \u05E9\u05DD \u05DE\u05DC\u05D0';
+    if (!email.includes('@'))            e.email    = '\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC \u05DC\u05D0 \u05EA\u05E7\u05D9\u05E0\u05D4';
+    if (password.length < 8)             e.password = '\u05E1\u05D9\u05E1\u05DE\u05D4 \u05D7\u05D9\u05D9\u05D1\u05EA \u05DC\u05D4\u05D9\u05D5\u05EA \u05DC\u05E4\u05D7\u05D5\u05EA 8 \u05EA\u05D5\u05D5\u05D9\u05DD';
+    if (password !== confirm)            e.confirm  = '\u05D4\u05E1\u05D9\u05E1\u05DE\u05D0\u05D5\u05EA \u05D0\u05D9\u05E0\u05DF \u05EA\u05D5\u05D0\u05DE\u05D5\u05EA';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -46,56 +50,52 @@ export function SignUpScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await signUp(email.trim().toLowerCase(), password, name.trim());
-      // Navigation handled by AuthContext listener in RootNavigator
     } catch (err: any) {
-      let msg = 'אירעה שגיאה. נסה/י שוב.';
-      if (err.code === 'auth/email-already-in-use') msg = 'כתובת המייל כבר רשומה במערכת.';
-      if (err.code === 'auth/invalid-email')        msg = 'כתובת מייל לא תקינה.';
-      if (err.code === 'auth/weak-password')        msg = 'הסיסמה חלשה מדי.';
-      Alert.alert('שגיאה בהרשמה', msg);
+      let msg = '\u05D0\u05D9\u05E8\u05E2\u05D4 \u05E9\u05D2\u05D9\u05D0\u05D4. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1.';
+      if (err.code === 'auth/email-already-in-use') msg = '\u05DB\u05EA\u05D5\u05D1\u05EA \u05D4\u05DE\u05D9\u05D9\u05DC \u05DB\u05D1\u05E8 \u05E8\u05E9\u05D5\u05DE\u05D4 \u05D1\u05DE\u05E2\u05E8\u05DB\u05EA.';
+      if (err.code === 'auth/invalid-email')        msg = '\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC \u05DC\u05D0 \u05EA\u05E7\u05D9\u05E0\u05D4.';
+      if (err.code === 'auth/weak-password')        msg = '\u05D4\u05E1\u05D9\u05E1\u05DE\u05D4 \u05D7\u05DC\u05E9\u05D4 \u05DE\u05D3\u05D9.';
+      setErrorMsg(msg);
+      setErrorSheet(true);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      <AppHeader
+        title={'\u05D9\u05E6\u05D9\u05E8\u05EA \u05D7\u05E9\u05D1\u05D5\u05DF'}
+        onBack={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>→</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>יצירת חשבון</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xxl }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Welcome text */}
           <View style={styles.welcome}>
             <View style={styles.avatarPlaceholder}>
-              <Text style={{ fontSize: 30 }}>👤</Text>
+              <Text style={{ fontSize: 30 }}>{'\uD83D\uDC64'}</Text>
             </View>
-            <Text style={styles.welcomeTitle}>ברוכ/ה הבא/ה!</Text>
+            <Text style={styles.welcomeTitle}>{'\u05D1\u05E8\u05D5\u05DB/\u05D4 \u05D4\u05D1\u05D0/\u05D4!'}</Text>
             <Text style={styles.welcomeSub}>
-              נרשם/ת בחינם ומתחיל/ה לבנות את התביעה שלך
+              {'\u05E0\u05E8\u05E9\u05DD/\u05EA \u05D1\u05D7\u05D9\u05E0\u05DD \u05D5\u05DE\u05EA\u05D7\u05D9\u05DC/\u05D4 \u05DC\u05D1\u05E0\u05D5\u05EA \u05D0\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05E9\u05DC\u05DA'}
             </Text>
           </View>
 
           {/* Form */}
           <Input
-            label="שם מלא"
-            placeholder="ישראל ישראלי"
+            label={'\u05E9\u05DD \u05DE\u05DC\u05D0'}
+            placeholder={'\u05D9\u05E9\u05E8\u05D0\u05DC \u05D9\u05E9\u05E8\u05D0\u05DC\u05D9'}
             value={name}
             onChangeText={setName}
             error={errors.name}
@@ -103,7 +103,7 @@ export function SignUpScreen({ navigation }: Props) {
             textContentType="name"
           />
           <Input
-            label="כתובת מייל"
+            label={'\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC'}
             placeholder="example@email.com"
             value={email}
             onChangeText={setEmail}
@@ -114,20 +114,20 @@ export function SignUpScreen({ navigation }: Props) {
             textContentType="emailAddress"
           />
           <Input
-            label="סיסמה"
-            placeholder="לפחות 8 תווים"
+            label={'\u05E1\u05D9\u05E1\u05DE\u05D4'}
+            placeholder={'\u05DC\u05E4\u05D7\u05D5\u05EA 8 \u05EA\u05D5\u05D5\u05D9\u05DD'}
             value={password}
             onChangeText={setPassword}
             error={errors.password}
             secureTextEntry={!showPw}
             textContentType="newPassword"
-            rightIcon={<Text style={styles.eyeIcon}>{showPw ? '🙈' : '👁️'}</Text>}
+            rightIcon={<Text style={styles.eyeIcon}>{showPw ? '\uD83D\uDE48' : '\uD83D\uDC41\uFE0F'}</Text>}
             onRightIconPress={() => setShowPw(!showPw)}
-            hint="8 תווים לפחות, כולל מספר"
+            hint={'8 \u05EA\u05D5\u05D5\u05D9\u05DD \u05DC\u05E4\u05D7\u05D5\u05EA, \u05DB\u05D5\u05DC\u05DC \u05DE\u05E1\u05E4\u05E8'}
           />
           <Input
-            label="אימות סיסמה"
-            placeholder="הזן/י סיסמה שוב"
+            label={'\u05D0\u05D9\u05DE\u05D5\u05EA \u05E1\u05D9\u05E1\u05DE\u05D4'}
+            placeholder={'\u05D4\u05D6\u05DF/\u05D9 \u05E1\u05D9\u05E1\u05DE\u05D4 \u05E9\u05D5\u05D1'}
             value={confirm}
             onChangeText={setConfirm}
             error={errors.confirm}
@@ -136,7 +136,7 @@ export function SignUpScreen({ navigation }: Props) {
           />
 
           <Button
-            label="יצירת חשבון"
+            label={'\u05D9\u05E6\u05D9\u05E8\u05EA \u05D7\u05E9\u05D1\u05D5\u05DF'}
             onPress={handleSignUp}
             size="lg"
             loading={loading}
@@ -146,7 +146,7 @@ export function SignUpScreen({ navigation }: Props) {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>או</Text>
+            <Text style={styles.dividerText}>{'\u05D0\u05D5'}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -156,57 +156,67 @@ export function SignUpScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.loginLinkText}>
-              כבר יש לך חשבון?{' '}
-              <Text style={styles.loginLinkAccent}>כניסה לחשבון</Text>
+              {'\u05DB\u05D1\u05E8 \u05D9\u05E9 \u05DC\u05DA \u05D7\u05E9\u05D1\u05D5\u05DF? '}
+              <Text style={styles.loginLinkAccent}>{'\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+
+      <BottomSheet
+        visible={errorSheet}
+        onClose={() => setErrorSheet(false)}
+        icon={'\u274C'}
+        title={'\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D4\u05E8\u05E9\u05DE\u05D4'}
+        body={errorMsg}
+        primaryLabel={'\u05E0\u05E1\u05D4 \u05E9\u05D5\u05D1'}
+        onPrimary={() => setErrorSheet(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe:         { flex: 1, backgroundColor: COLORS.white },
+  container:    { flex: 1, backgroundColor: Colors.white },
   scroll:       { flex: 1 },
-  scrollContent:{ padding: SPACING.lg, paddingBottom: SPACING.xxl },
+  scrollContent:{ padding: SCREEN_PADDING },
 
-  header: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[100],
-  },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 20, color: COLORS.primary[600] },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.gray[800] },
-
-  welcome: { alignItems: 'center', paddingVertical: SPACING.xl },
+  welcome: { alignItems: 'center', paddingVertical: Spacing.xl },
   avatarPlaceholder: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: COLORS.primary[100],
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: Spacing.md,
   },
-  welcomeTitle: { fontSize: 24, fontWeight: '700', color: COLORS.gray[800], marginBottom: SPACING.xs },
-  welcomeSub:   { fontSize: 14, color: COLORS.gray[500], textAlign: 'center', lineHeight: 22 },
+  welcomeTitle: {
+    ...Typography.h2,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  welcomeSub: {
+    ...Typography.small,
+    color: Colors.muted,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 
   eyeIcon:   { fontSize: 18 },
-  submitBtn: { marginTop: SPACING.sm },
+  submitBtn: { marginTop: Spacing.sm },
 
   dividerRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    marginVertical: SPACING.lg,
-    gap: SPACING.sm,
+    marginVertical: Spacing.xl,
+    gap: Spacing.sm,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.gray[200] },
-  dividerText: { fontSize: 13, color: COLORS.gray[400] },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.gray200 },
+  dividerText: { ...Typography.caption, color: Colors.gray400 },
 
   loginLink: { alignItems: 'center' },
-  loginLinkText: { fontSize: 15, color: COLORS.gray[600], textAlign: 'center' },
-  loginLinkAccent: { color: COLORS.primary[600], fontWeight: '600' },
+  loginLinkText: {
+    ...Typography.bodyMedium,
+    color: Colors.gray600,
+    textAlign: 'center',
+  },
+  loginLinkAccent: { color: Colors.primary, fontWeight: '600' },
 });

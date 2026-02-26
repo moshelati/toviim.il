@@ -3,4 +3,10 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
+// Disable lazy bundling so web preview works in embedded iframes
+config.server = {
+  ...config.server,
+  experimentalImportSupport: false,
+};
+
 module.exports = withNativeWind(config, { input: './global.css' });

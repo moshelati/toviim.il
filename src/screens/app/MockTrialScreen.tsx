@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, StatusBar,
+  View, Text, StyleSheet,
   TouchableOpacity, TextInput, FlatList,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../types/navigation';
 import { useAuth } from '../../context/AuthContext';
-import { sendMessageToGemini, GeminiMessage } from '../../lib/gemini';
+import { sendMessage, AIError } from '../../ai';
+import type { GeminiMessage } from '../../ai';
 import { getClaim } from '../../lib/claimsService';
 import { Claim, ChatMessage } from '../../types/claim';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '../../theme';
+import { AppHeader } from '../../components/ui/AppHeader';
+import { BottomSheet } from '../../components/ui/BottomSheet';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'MockTrial'>;
 
@@ -24,24 +26,32 @@ const ROLE_LABEL: Record<TrialRole, string> = {
 };
 
 const ROLE_COLOR: Record<TrialRole, string> = {
-  judge:     COLORS.primary[700],
+  judge:     Colors.primary,
   defendant: '#b45309',
 };
 
 // ─── Build mock-trial system prompt ──────────────────────────────────────────
 function buildMockTrialPrompt(claim: Claim, role: TrialRole): string {
-  const claimSummary = claim.summary
-    ?? 'פרטי התביעה לא זמינים.';
+  const claimSummary = claim.factsSummary || claim.summary || 'פרטי התביעה לא זמינים.';
+  const plaintiffName = claim.plaintiffName || claim.plaintiff?.fullName || 'לא ידוע';
+  const defendantName = claim.defendant || claim.defendants?.[0]?.name || 'לא ידוע';
+  const claimAmount = claim.amountClaimedNis || claim.amount || '?';
+  const demands = claim.demands?.join(', ') || '';
+  const timeline = claim.timeline?.map(e => `${e.date}: ${e.description}`).join('\n') || '';
 
   if (role === 'judge') {
     return `
 אתה שופט בבית משפט לתביעות קטנות בישראל.
 שמך: כבוד השופט ישראל כהן.
+חשוב: אתה לא עורך דין ולא מספק ייעוץ משפטי. זהו סימולציה לצורך תרגול בלבד.
 
 פרטי התיק:
-- תובע: ${claim.plaintiffName ?? 'לא ידוע'}
-- סכום: ₪${claim.amount ?? '?'}
+- תובע: ${plaintiffName}
+- נתבע: ${defendantName}
+- סכום: ₪${claimAmount}
 - תקציר: ${claimSummary}
+${demands ? `- סעדים מבוקשים: ${demands}` : ''}
+${timeline ? `- ציר זמן:\n${timeline}` : ''}
 
 תפקידך:
 1. לנהל את הדיון בצורה מקצועית וענינית.
@@ -59,11 +69,14 @@ function buildMockTrialPrompt(claim: Claim, role: TrialRole): string {
   // Defendant role
   return `
 אתה הנתבע בתביעה קטנה.
+חשוב: אתה לא עורך דין ולא מספק ייעוץ משפטי. זהו סימולציה לצורך תרגול בלבד.
 
 פרטי התיק נגדך:
-- תובע: ${claim.plaintiffName ?? 'לא ידוע'}
-- סכום הנתבע: ₪${claim.amount ?? '?'}
+- תובע: ${plaintiffName}
+- אתה (הנתבע): ${defendantName}
+- סכום הנתבע: ₪${claimAmount}
 - טענות התובע: ${claimSummary}
+${demands ? `- סעדים מבוקשים: ${demands}` : ''}
 
 תפקידך:
 1. להגן על עצמך מהטענות שנטענו נגדך.
@@ -110,7 +123,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
     setIsTyping(true);
     try {
       const systemPrompt = buildMockTrialPrompt(c, role);
-      const opening = await sendMessageToGemini(
+      const opening = await sendMessage(
         [{ role: 'user', parts: [{ text: 'פתח את הדיון' }] }],
         systemPrompt,
       );
@@ -155,7 +168,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
         parts: [{ text: m.text }],
       }));
       const systemPrompt = buildMockTrialPrompt(claim, activeRole);
-      const aiText = await sendMessageToGemini(history, systemPrompt);
+      const aiText = await sendMessage(history, systemPrompt);
 
       const aiMsg: ChatMessage = { role: 'model', text: aiText, timestamp: Date.now() };
       setMessages([...updatedMsgs, aiMsg]);
@@ -244,20 +257,12 @@ export function MockTrialScreen({ route, navigation }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary[900]} />
-
-      {/* ── Header ── */}
-      <LinearGradient colors={[COLORS.primary[900], COLORS.primary[700]]} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>→</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>מוק-טריאל AI</Text>
-          <Text style={styles.headerSub}>תרגול דיון משפטי</Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+    <View style={styles.safe}>
+      <AppHeader
+        title="מוק-טריאל AI"
+        subtitle="תרגול דיון משפטי"
+        onBack={() => navigation.goBack()}
+      />
 
       {/* ── Role selector ── */}
       <View style={styles.roleBar}>
@@ -282,7 +287,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
       >
         {!initialized ? (
           <View style={styles.loadingCenter}>
-            <ActivityIndicator size="large" color={COLORS.primary[600]} />
+            <ActivityIndicator size="large" color={Colors.primary} />
             <Text style={styles.loadingText}>פותח את הדיון...</Text>
           </View>
         ) : (
@@ -318,7 +323,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
               value={inputText}
               onChangeText={setInputText}
               placeholder="הצג את הטיעון שלך..."
-              placeholderTextColor={COLORS.gray[400]}
+              placeholderTextColor={Colors.gray400}
               textAlign="right"
               multiline
               maxLength={800}
@@ -334,112 +339,102 @@ export function MockTrialScreen({ route, navigation }: Props) {
           </View>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f0f0f5' },
-
-  header: {
-    flexDirection: 'row-reverse', alignItems: 'center',
-    justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: SPACING.md,
-  },
-  backBtn:      { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon:     { fontSize: 20, color: COLORS.white },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle:  { fontSize: 17, fontWeight: '700', color: COLORS.white },
-  headerSub:    { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  safe: { flex: 1, backgroundColor: Colors.surface },
 
   roleBar: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: SPACING.sm,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.gray[100],
+    flexDirection: 'row-reverse', alignItems: 'center', gap: Spacing.sm,
+    paddingHorizontal: SCREEN_PADDING, paddingVertical: Spacing.sm,
+    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  roleBarLabel:    { fontSize: 12, color: COLORS.gray[500], fontWeight: '600' },
+  roleBarLabel: { ...Typography.caption, color: Colors.muted, fontWeight: '600' },
   roleChip: {
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs + 2,
-    borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.gray[300],
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.full, borderWidth: 1.5, borderColor: Colors.gray300,
   },
-  roleChipActive:     { backgroundColor: COLORS.primary[600], borderColor: COLORS.primary[600] },
-  roleChipText:       { fontSize: 13, fontWeight: '700', color: COLORS.gray[600] },
-  roleChipTextActive: { color: COLORS.white },
+  roleChipActive:     { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  roleChipText:       { ...Typography.caption, fontWeight: '700', color: Colors.gray600 },
+  roleChipTextActive: { color: Colors.white },
 
-  loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md },
-  loadingText:   { fontSize: 14, color: COLORS.gray[500] },
+  loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.base },
+  loadingText:   { ...Typography.small, color: Colors.muted },
 
-  list: { paddingHorizontal: SPACING.md, paddingTop: SPACING.md, paddingBottom: SPACING.sm },
+  list: { paddingHorizontal: SCREEN_PADDING, paddingTop: Spacing.base, paddingBottom: Spacing.sm },
 
-  bubbleWrap:     { flexDirection: 'row', marginBottom: SPACING.sm, alignItems: 'flex-end', gap: 8 },
+  bubbleWrap:     { flexDirection: 'row', marginBottom: Spacing.sm, alignItems: 'flex-end', gap: 8 },
   bubbleWrapAI:   { flexDirection: 'row-reverse' },
   bubbleWrapUser: { justifyContent: 'flex-end' },
 
   avatar: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: COLORS.primary[100],
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   avatarText: { fontSize: 16 },
 
   bubble: {
-    maxWidth: '78%', borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm + 2,
+    maxWidth: '78%', borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.base, paddingVertical: Spacing.md,
   },
   bubbleAI: {
-    backgroundColor: COLORS.white, borderBottomRightRadius: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07, shadowRadius: 4, elevation: 1,
+    backgroundColor: Colors.white, borderBottomRightRadius: 4,
+    ...Shadows.sm,
   },
-  bubbleUser: { backgroundColor: COLORS.primary[600], borderBottomLeftRadius: 4 },
+  bubbleUser: { backgroundColor: Colors.primary, borderBottomLeftRadius: 4 },
 
-  roleLabel:     { fontSize: 10, fontWeight: '800', marginBottom: 4, textAlign: 'right' },
-  bubbleText:    { fontSize: 14, lineHeight: 22, textAlign: 'right' },
-  bubbleTextAI:  { color: COLORS.gray[800] },
-  bubbleTextUser:{ color: COLORS.white },
-  bubbleTime:    { fontSize: 10, color: COLORS.gray[400], textAlign: 'left', marginTop: 4 },
+  roleLabel:     { ...Typography.tiny, fontWeight: '800', marginBottom: 4, textAlign: 'right' },
+  bubbleText:    { ...Typography.small, lineHeight: 22, textAlign: 'right' },
+  bubbleTextAI:  { color: Colors.text },
+  bubbleTextUser:{ color: Colors.white },
+  bubbleTime:    { ...Typography.tiny, color: Colors.gray400, textAlign: 'left', marginTop: 4 },
   bubbleTimeAI:  { textAlign: 'right' },
 
-  typingDots: { color: COLORS.gray[400], letterSpacing: 3, fontSize: 12 },
+  typingDots: { color: Colors.gray400, letterSpacing: 3, fontSize: 12 },
 
   verdictBanner: {
-    margin: SPACING.md, backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
-    padding: SPACING.lg, alignItems: 'center',
-    borderWidth: 2, borderColor: COLORS.primary[200],
+    margin: Spacing.base, backgroundColor: Colors.white, borderRadius: Radius.xl,
+    padding: Spacing.xl, alignItems: 'center',
+    borderWidth: 1, borderColor: Colors.border,
+    ...Shadows.md,
   },
-  verdictIcon:  { fontSize: 44, marginBottom: SPACING.sm },
-  verdictTitle: { fontSize: 20, fontWeight: '800', color: COLORS.gray[800], marginBottom: SPACING.xs },
+  verdictIcon:  { fontSize: 44, marginBottom: Spacing.sm },
+  verdictTitle: { ...Typography.h3, color: Colors.text, marginBottom: Spacing.xs },
   verdictSub: {
-    fontSize: 13, color: COLORS.gray[500], textAlign: 'center',
-    lineHeight: 22, marginBottom: SPACING.lg,
+    ...Typography.caption, color: Colors.muted, textAlign: 'center',
+    lineHeight: 22, marginBottom: Spacing.xl,
   },
-  verdictActions: { flexDirection: 'row-reverse', gap: SPACING.sm, width: '100%' },
+  verdictActions: { flexDirection: 'row-reverse', gap: Spacing.sm, width: '100%' },
   verdictBtn: {
-    flex: 1, backgroundColor: COLORS.primary[600], borderRadius: RADIUS.md,
-    paddingVertical: SPACING.sm + 4, alignItems: 'center',
+    flex: 1, backgroundColor: Colors.primary, borderRadius: Radius.button,
+    paddingVertical: Spacing.md, alignItems: 'center',
   },
-  verdictBtnSecondary: { backgroundColor: COLORS.gray[100] },
-  verdictBtnText:          { color: COLORS.white, fontWeight: '700', fontSize: 14 },
-  verdictBtnTextSecondary: { color: COLORS.gray[700], fontWeight: '700', fontSize: 14 },
+  verdictBtnSecondary: { backgroundColor: Colors.gray100 },
+  verdictBtnText:          { ...Typography.button, color: Colors.white },
+  verdictBtnTextSecondary: { ...Typography.button, color: Colors.text },
 
   inputBar: {
     flexDirection: 'row-reverse', alignItems: 'flex-end',
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    paddingBottom: SPACING.md, backgroundColor: COLORS.white,
-    borderTopWidth: 1, borderTopColor: COLORS.gray[100], gap: SPACING.sm,
+    paddingHorizontal: SCREEN_PADDING, paddingVertical: Spacing.sm,
+    paddingBottom: Spacing.base, backgroundColor: Colors.white,
+    borderTopWidth: 1, borderTopColor: Colors.border, gap: Spacing.sm,
   },
   textInput: {
     flex: 1, minHeight: 44, maxHeight: 120,
-    backgroundColor: COLORS.gray[50], borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm + 2,
-    fontSize: 14, color: COLORS.gray[800],
-    borderWidth: 1.5, borderColor: COLORS.gray[200],
+    backgroundColor: Colors.surface, borderRadius: Radius.full,
+    paddingHorizontal: Spacing.base, paddingVertical: Spacing.md,
+    ...Typography.small, color: Colors.text,
+    borderWidth: 1, borderColor: Colors.border,
   },
   sendBtn: {
-    backgroundColor: COLORS.primary[700], borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md, paddingVertical: 10, minHeight: 44,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: Colors.primary,
     alignItems: 'center', justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: COLORS.gray[300] },
-  sendIcon: { color: COLORS.white, fontWeight: '700', fontSize: 13 },
+  sendBtnDisabled: { backgroundColor: Colors.gray300 },
+  sendIcon: { color: Colors.white, fontWeight: '700', fontSize: 18 },
 });

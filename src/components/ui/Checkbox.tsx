@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import { COLORS, RADIUS, SPACING } from '../../constants/theme';
+import { Colors, Radius, Spacing, Typography } from '../../theme';
 
 interface CheckboxProps {
   checked: boolean;
@@ -16,7 +16,7 @@ export function Checkbox({ checked, onToggle, label }: CheckboxProps) {
       activeOpacity={0.7}
     >
       <View style={[styles.box, checked && styles.checkedBox]}>
-        {checked && <Text style={styles.checkmark}>✓</Text>}
+        {checked && <Text style={styles.checkmark}>{'\u2713'}</Text>}
       </View>
       <View style={styles.labelWrap}>
         {typeof label === 'string' ? (
@@ -31,34 +31,34 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row-reverse',
     alignItems: 'flex-start',
-    marginVertical: SPACING.sm,
+    marginVertical: Spacing.sm,
   },
   box: {
     width: 22,
     height: 22,
-    borderRadius: RADIUS.sm - 2,
+    borderRadius: Radius.sm - 2,
     borderWidth: 2,
-    borderColor: COLORS.gray[300],
-    backgroundColor: COLORS.white,
+    borderColor: Colors.gray300,
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: SPACING.sm,
+    marginLeft: Spacing.sm,
     flexShrink: 0,
   },
   checkedBox: {
-    backgroundColor: COLORS.primary[600],
-    borderColor: COLORS.primary[600],
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   checkmark: {
-    color: COLORS.white,
+    color: Colors.white,
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 16,
   },
   labelWrap: { flex: 1 },
   label: {
-    fontSize: 14,
-    color: COLORS.gray[700],
+    ...Typography.small,
+    color: Colors.gray700,
     textAlign: 'right',
     lineHeight: 22,
   },

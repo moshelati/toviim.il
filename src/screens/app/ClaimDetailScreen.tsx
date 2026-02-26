@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, StatusBar,
+  View, Text, StyleSheet, StatusBar,
   TouchableOpacity, ScrollView, Image, ActivityIndicator,
-  Alert, TextInput, Platform, FlatList,
+  Alert, TextInput, Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -14,7 +13,13 @@ import { useAuth } from '../../context/AuthContext';
 import { getClaim, addEvidence, updateClaimMeta } from '../../lib/claimsService';
 import { uploadEvidence, uploadSignature } from '../../lib/evidenceService';
 import { Claim, Evidence } from '../../types/claim';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { AppHeader } from '../../components/ui/AppHeader';
+import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
+import { PrimaryButton, SecondaryButton } from '../../components/ui/PrimaryButton';
+import { ProgressRing, getScoreColor } from '../../components/ui/ProgressRing';
+import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '../../theme';
+import { SMALL_CLAIMS_MAX_AMOUNT_NIS, formatNIS } from '../../config/legal';
 
 // Conditional import for SignatureCanvas (not available on web)
 let SignatureCanvas: any = null;
@@ -25,7 +30,7 @@ if (Platform.OS !== 'web') {
 }
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ClaimDetail'>;
-type Tab = 'evidence' | 'signature' | 'pdf';
+type Tab = 'overview' | 'evidence' | 'signature' | 'pdf';
 
 const CLAIM_TYPE_HE: Record<string, string> = {
   consumer: 'צרכנות',
@@ -217,7 +222,7 @@ function buildPdfHtml(params: {
       <span>₪ ${params.amount || '0'}</span>
     </div>
     <p style="font-size:11px; color:#666; margin-top:6px;">
-      * הגבול המקסימלי לתביעה קטנה הינו 38,800 ₪ (נכון לשנת 2024)
+      * הגבול המקסימלי לתביעה קטנה הינו ${SMALL_CLAIMS_MAX_AMOUNT_NIS.toLocaleString('he-IL')} ₪
     </p>
   </div>
 
@@ -274,7 +279,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
 
   const [claim,            setClaim]            = useState<Claim | null>(null);
   const [loading,          setLoading]          = useState(true);
-  const [activeTab,        setActiveTab]        = useState<Tab>('evidence');
+  const [activeTab,        setActiveTab]        = useState<Tab>('overview');
 
   // Evidence state
   const [evidenceList,     setEvidenceList]     = useState<Evidence[]>([]);
@@ -302,12 +307,12 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
       if (c) {
         setClaim(c);
         setEvidenceList(c.evidence ?? []);
-        setDefendant(c.defendant ?? '');
-        setDefendantAddress(c.defendantAddress ?? '');
-        setAmount(c.amount ? String(c.amount) : '');
-        setPlaintiffAddress(c.plaintiffAddress ?? '');
-        setSignatureUrl(c.signatureUrl ?? '');
-        setSignatureSaved(!!c.signatureUrl);
+        setDefendant(c.defendant ?? c.defendants?.[0]?.name ?? '');
+        setDefendantAddress(c.defendantAddress ?? c.defendants?.[0]?.address ?? '');
+        setAmount(c.amount ? String(c.amount) : c.amountClaimedNis ? String(c.amountClaimedNis) : '');
+        setPlaintiffAddress(c.plaintiffAddress ?? c.plaintiff?.address ?? '');
+        setSignatureUrl(c.signatureUrl ?? c.signatureUri ?? '');
+        setSignatureSaved(!!(c.signatureUrl || c.signatureUri));
       }
       setLoading(false);
     })();
@@ -339,7 +344,6 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
         setEvidenceList(updated);
         await addEvidence(claimId, updated);
       } catch (err: any) {
-        // If Storage not set up, save locally for PDF purposes
         const localEv: Evidence = {
           id:         `local_${Date.now()}`,
           uri:        asset.uri,
@@ -375,7 +379,6 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
       try {
         url = await uploadSignature(user!.uid, claimId, sigDataUrl);
       } catch (_) {
-        // Firebase Storage not available — store the data URL directly
         url = sigDataUrl;
       }
       setSignatureUrl(url);
@@ -399,15 +402,15 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
       });
 
       const html = buildPdfHtml({
-        plaintiffName:    claim.plaintiffName  ?? '',
-        plaintiffId:      claim.plaintiffId    ?? '',
-        plaintiffPhone:   claim.plaintiffPhone ?? '',
-        plaintiffAddress: plaintiffAddress     || claim.plaintiffAddress || '',
-        defendant:        defendant            || claim.defendant         || '',
-        defendantAddress: defendantAddress     || claim.defendantAddress  || '',
-        amount:           amount               || String(claim.amount ?? ''),
+        plaintiffName:    claim.plaintiffName  ?? claim.plaintiff?.fullName ?? '',
+        plaintiffId:      claim.plaintiffId    ?? claim.plaintiff?.idNumber ?? '',
+        plaintiffPhone:   claim.plaintiffPhone ?? claim.plaintiff?.phone ?? '',
+        plaintiffAddress: plaintiffAddress     || claim.plaintiffAddress || claim.plaintiff?.address || '',
+        defendant:        defendant            || claim.defendant || claim.defendants?.[0]?.name || '',
+        defendantAddress: defendantAddress     || claim.defendantAddress || claim.defendants?.[0]?.address || '',
+        amount:           amount               || String(claim.amount ?? claim.amountClaimedNis ?? ''),
         claimType:        CLAIM_TYPE_HE[claim.claimType ?? ''] ?? '',
-        summary:          claim.summary        ?? '',
+        summary:          claim.factsSummary   || claim.summary || '',
         evidenceList:     evidenceList.map(e => e.name),
         signatureUrl:     signatureUrl,
         date:             today,
@@ -416,7 +419,6 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
 
       let uri = '';
       if (Platform.OS === 'web') {
-        // On web: open the HTML in a new tab so the user can print/save as PDF
         const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         uri = URL.createObjectURL(blob);
         window.open(uri, '_blank');
@@ -427,7 +429,6 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
       setPdfUri(uri);
       setPdfGenerated(true);
 
-      // Persist updated meta
       await updateClaimMeta(claimId, {
         status:           'review',
         defendant:        defendant,
@@ -468,63 +469,52 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
   // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={styles.screen}>
+        <AppHeader title="בניית כתב תביעה" onBack={() => navigation.goBack()} />
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary[600]} />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'evidence',  label: 'ראיות',  icon: '📎' },
-    { key: 'signature', label: 'חתימה',  icon: '✍️' },
-    { key: 'pdf',       label: 'PDF',    icon: '📄' },
+    { key: 'overview',   label: 'סקירה',  icon: '📊' },
+    { key: 'evidence',   label: 'ראיות',  icon: '📎' },
+    { key: 'signature',  label: 'חתימה',  icon: '✍️' },
+    { key: 'pdf',        label: 'PDF',    icon: '📄' },
   ];
 
+  const readinessScore = claim?.readinessScore ?? 0;
+  const scoreColor = getScoreColor(readinessScore);
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary[700]} />
+    <View style={styles.screen}>
+      <StatusBar barStyle="light-content" />
 
       {/* ── Header ── */}
-      <LinearGradient colors={[COLORS.primary[700], COLORS.primary[600]]} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>→</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>בניית כתב תביעה</Text>
-          {claim?.claimType && (
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeBadgeText}>{CLAIM_TYPE_HE[claim.claimType] ?? claim.claimType}</Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          style={styles.trialBtn}
-          onPress={() => navigation.navigate('MockTrial', { claimId })}
-        >
-          <Text style={styles.trialBtnText}>⚖️ מוק</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+      <AppHeader
+        title="בניית כתב תביעה"
+        subtitle={claim?.claimType ? CLAIM_TYPE_HE[claim.claimType] : undefined}
+        onBack={() => navigation.goBack()}
+        rightIcon={<Text style={styles.trialBtnIcon}>⚖️</Text>}
+        onRight={() => navigation.navigate('MockTrial', { claimId })}
+      />
 
       {/* ── Plaintiff summary strip ── */}
       <View style={styles.summaryStrip}>
         <Text style={styles.summaryName}>👤 {claim?.plaintiffName ?? 'משתמש'}</Text>
-        {evidenceList.length > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{evidenceList.length} ראיות</Text>
-          </View>
-        )}
-        {signatureSaved && (
-          <View style={[styles.badge, styles.badgeGreen]}>
-            <Text style={styles.badgeText}>✅ חתום</Text>
-          </View>
-        )}
-        {pdfGenerated && (
-          <View style={[styles.badge, styles.badgePurple]}>
-            <Text style={styles.badgeText}>📄 PDF</Text>
-          </View>
-        )}
+        <View style={styles.stripBadges}>
+          {evidenceList.length > 0 && (
+            <Badge label={`${evidenceList.length} ראיות`} variant="muted" />
+          )}
+          {signatureSaved && (
+            <Badge label="חתום" variant="success" icon="✅" />
+          )}
+          {pdfGenerated && (
+            <Badge label="PDF" variant="primary" icon="📄" />
+          )}
+        </View>
       </View>
 
       {/* ── Tab bar ── */}
@@ -544,6 +534,136 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
       </View>
 
       {/* ── Tab Content ── */}
+      {/* ── OVERVIEW TAB ── */}
+      {activeTab === 'overview' && (
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabPad}>
+          {/* Readiness Score */}
+          <Card style={styles.scoreCard}>
+            <Text style={styles.scoreLabel}>ציון מוכנות</Text>
+            <View style={styles.scoreRow}>
+              <ProgressRing score={readinessScore} size={90} strokeWidth={6} />
+              <View style={styles.scoreInfo}>
+                <Text style={[styles.strengthBadge, { backgroundColor: scoreColor + '20', color: scoreColor }]}>
+                  {claim?.strengthScore === 'strong' ? '💪 חזקה' :
+                   claim?.strengthScore === 'medium' ? '👍 בינונית' : '⚠️ חלשה'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Confidence', { claimId })}
+                  style={styles.detailLink}
+                >
+                  <Text style={styles.detailLinkText}>פירוט מלא ←</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.scoreBarBg}>
+              <View style={[styles.scoreBarFill, { width: `${Math.min(readinessScore, 100)}%`, backgroundColor: scoreColor }]} />
+            </View>
+          </Card>
+
+          {/* Claim Summary */}
+          {(claim?.summary || claim?.factsSummary) && (
+            <Card style={styles.sectionCard}>
+              <Text style={styles.sectionCardTitle}>📋 סיכום התביעה</Text>
+              <Text style={styles.sectionCardText}>
+                {claim?.factsSummary || claim?.summary}
+              </Text>
+            </Card>
+          )}
+
+          {/* Timeline */}
+          {claim?.timeline && claim.timeline.length > 0 && (
+            <Card style={styles.sectionCard}>
+              <Text style={styles.sectionCardTitle}>📅 ציר זמן</Text>
+              {claim.timeline.map((event, i) => (
+                <View key={i} style={styles.timelineRow}>
+                  <View style={styles.timelineDot} />
+                  <View style={styles.timelineContent}>
+                    <Text style={styles.timelineDate}>{event.date}</Text>
+                    <Text style={styles.timelineDesc}>{event.description || event.event}</Text>
+                  </View>
+                </View>
+              ))}
+            </Card>
+          )}
+
+          {/* Demands */}
+          {claim?.demands && claim.demands.length > 0 && (
+            <Card style={styles.sectionCard}>
+              <Text style={styles.sectionCardTitle}>💰 סעדים מבוקשים</Text>
+              {claim.demands.map((demand, i) => (
+                <View key={i} style={styles.demandRow}>
+                  <Text style={styles.demandBullet}>•</Text>
+                  <Text style={styles.demandText}>{demand}</Text>
+                </View>
+              ))}
+            </Card>
+          )}
+
+          {/* Risk Flags */}
+          {claim?.riskFlags && claim.riskFlags.length > 0 && (
+            <Card style={[styles.sectionCard, styles.riskCard]}>
+              <Text style={styles.sectionCardTitle}>🚩 דגלי סיכון</Text>
+              {claim.riskFlags.map((flag, i) => (
+                <View key={i} style={styles.flagRow}>
+                  <Text style={styles.flagIcon}>{typeof flag === 'object' ? (flag.icon || '⚠️') : '⚠️'}</Text>
+                  <View style={styles.flagContent}>
+                    <Text style={styles.flagTitle}>
+                      {typeof flag === 'object' ? flag.title : String(flag)}
+                    </Text>
+                    {typeof flag === 'object' && flag.description ? (
+                      <Text style={styles.flagDesc}>{flag.description}</Text>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </Card>
+          )}
+
+          {/* Missing Fields */}
+          {claim?.missingFields && claim.missingFields.length > 0 && (
+            <Card style={[styles.sectionCard, styles.missingCard]}>
+              <Text style={styles.sectionCardTitle}>📝 שדות חסרים</Text>
+              {claim.missingFields.map((field, i) => (
+                <View key={i} style={styles.flagRow}>
+                  <Text style={styles.flagIcon}>
+                    {typeof field === 'object' && field.importance === 'required' ? '🔴' : '🟡'}
+                  </Text>
+                  <Text style={styles.flagTitle}>
+                    {typeof field === 'object' ? field.label : String(field)}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+          )}
+
+          {/* Suggestions */}
+          {claim?.suggestions && claim.suggestions.length > 0 && (
+            <Card style={[styles.sectionCard, styles.suggestCard]}>
+              <Text style={styles.sectionCardTitle}>💡 המלצות לשיפור</Text>
+              {claim.suggestions.map((sug, i) => (
+                <View key={i} style={styles.flagRow}>
+                  <Text style={styles.flagIcon}>{typeof sug === 'object' ? (sug.icon || '💡') : '💡'}</Text>
+                  <View style={styles.flagContent}>
+                    <Text style={styles.flagTitle}>
+                      {typeof sug === 'object' ? sug.title : String(sug)}
+                    </Text>
+                    {typeof sug === 'object' && sug.description ? (
+                      <Text style={styles.flagDesc}>{sug.description}</Text>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </Card>
+          )}
+
+          <PrimaryButton
+            title="המשך לראיות ←"
+            onPress={() => setActiveTab('evidence')}
+            style={{ marginTop: Spacing.base }}
+          />
+        </ScrollView>
+      )}
+
       {/* ── EVIDENCE TAB ── */}
       {activeTab === 'evidence' && (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabPad}>
@@ -576,7 +696,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
 
           {uploading && (
             <View style={styles.uploadingRow}>
-              <ActivityIndicator size="small" color={COLORS.primary[600]} />
+              <ActivityIndicator size="small" color={Colors.primary} />
               <Text style={styles.uploadingText}>מעלה ראיה...</Text>
             </View>
           )}
@@ -591,7 +711,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
           ) : (
             <View style={styles.evidenceGrid}>
               {evidenceList.map(ev => (
-                <View key={ev.id} style={styles.evidenceCard}>
+                <Card key={ev.id} noPadding style={styles.evidenceCard}>
                   <Image
                     source={{ uri: ev.localUri ?? ev.uri }}
                     style={styles.evidenceThumb}
@@ -612,18 +732,17 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                   >
                     <Text style={styles.evidenceDeleteIcon}>🗑️</Text>
                   </TouchableOpacity>
-                </View>
+                </Card>
               ))}
             </View>
           )}
 
           {evidenceList.length > 0 && (
-            <TouchableOpacity
-              style={styles.continueBtn}
+            <PrimaryButton
+              title="המשך לחתימה ←"
               onPress={() => setActiveTab('signature')}
-            >
-              <Text style={styles.continueBtnText}>המשך לחתימה ←</Text>
-            </TouchableOpacity>
+              style={{ marginTop: Spacing.base }}
+            />
           )}
         </ScrollView>
       )}
@@ -645,9 +764,11 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
               <Text style={styles.webSigSub}>
                 על מנת לחתום, פתח את האפליקציה בטלפון. ניתן להמשיך ולצור PDF ללא חתימה.
               </Text>
-              <TouchableOpacity style={styles.continueBtn} onPress={() => setActiveTab('pdf')}>
-                <Text style={styles.continueBtnText}>המשך ל-PDF ←</Text>
-              </TouchableOpacity>
+              <PrimaryButton
+                title="המשך ל-PDF ←"
+                onPress={() => setActiveTab('pdf')}
+                style={{ marginTop: Spacing.base }}
+              />
             </View>
           ) : SignatureCanvas ? (
             <View style={styles.sigWrapper}>
@@ -655,16 +776,16 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 <View style={styles.sigSavedBox}>
                   <Image source={{ uri: signatureUrl }} style={styles.sigSavedImg} resizeMode="contain" />
                   <Text style={styles.sigSavedLabel}>✅ חתימה נשמרה</Text>
-                  <TouchableOpacity
-                    style={styles.sigClearBtn}
+                  <SecondaryButton
+                    title="🔄 חתום שוב"
                     onPress={() => {
                       setSignatureSaved(false);
                       setSignatureUrl('');
                       sigRef.current?.clearSignature();
                     }}
-                  >
-                    <Text style={styles.sigClearBtnText}>🔄 חתום שוב</Text>
-                  </TouchableOpacity>
+                    small
+                    style={{ marginTop: Spacing.base }}
+                  />
                 </View>
               ) : (
                 <>
@@ -678,16 +799,16 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                     webStyle={`
                       .m-signature-pad { box-shadow: none; border: none; }
                       .m-signature-pad--body { border: none; }
-                      .m-signature-pad--footer { background: #f5f3ff; border-top: 1px solid #ddd6fe; }
-                      .button { color: white; background: #7c3aed; }
-                      .button.clear { background: #9ca3af; }
+                      .m-signature-pad--footer { background: ${Colors.primaryLight}; border-top: 1px solid ${Colors.border}; }
+                      .button { color: white; background: ${Colors.primary}; }
+                      .button.clear { background: ${Colors.gray400}; }
                     `}
                     style={styles.sigCanvas}
                     backgroundColor="rgb(255,255,255)"
                   />
                   {savingSig && (
                     <View style={styles.savingOverlay}>
-                      <ActivityIndicator color={COLORS.primary[600]} />
+                      <ActivityIndicator color={Colors.primary} />
                       <Text style={styles.savingText}>שומר חתימה...</Text>
                     </View>
                   )}
@@ -712,7 +833,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
           </Text>
 
           {/* Defendant details */}
-          <View style={styles.formCard}>
+          <Card style={styles.formCard}>
             <Text style={styles.formCardTitle}>פרטי הנתבע</Text>
             <View style={styles.inputWrap}>
               <Text style={styles.inputLabel}>שם הנתבע / שם העסק</Text>
@@ -721,7 +842,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 value={defendant}
                 onChangeText={setDefendant}
                 placeholder="לדוגמה: חברת ABC בע״מ"
-                placeholderTextColor={COLORS.gray[400]}
+                placeholderTextColor={Colors.gray400}
                 textAlign="right"
               />
             </View>
@@ -732,14 +853,14 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 value={defendantAddress}
                 onChangeText={setDefendantAddress}
                 placeholder="רחוב, עיר"
-                placeholderTextColor={COLORS.gray[400]}
+                placeholderTextColor={Colors.gray400}
                 textAlign="right"
               />
             </View>
-          </View>
+          </Card>
 
           {/* Plaintiff details */}
-          <View style={styles.formCard}>
+          <Card style={styles.formCard}>
             <Text style={styles.formCardTitle}>פרטי התובע (להשלמה)</Text>
             <View style={styles.inputWrap}>
               <Text style={styles.inputLabel}>כתובת מגורים</Text>
@@ -748,14 +869,14 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 value={plaintiffAddress}
                 onChangeText={setPlaintiffAddress}
                 placeholder="רחוב, עיר, מיקוד"
-                placeholderTextColor={COLORS.gray[400]}
+                placeholderTextColor={Colors.gray400}
                 textAlign="right"
               />
             </View>
-          </View>
+          </Card>
 
           {/* Claim amount */}
-          <View style={styles.formCard}>
+          <Card style={styles.formCard}>
             <Text style={styles.formCardTitle}>סכום התביעה ובית המשפט</Text>
             <View style={styles.inputWrap}>
               <Text style={styles.inputLabel}>סכום בשקלים (₪)</Text>
@@ -764,7 +885,7 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="לדוגמה: 5000"
-                placeholderTextColor={COLORS.gray[400]}
+                placeholderTextColor={Colors.gray400}
                 keyboardType="number-pad"
                 textAlign="right"
               />
@@ -776,11 +897,11 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
                 value={courtLocation}
                 onChangeText={setCourtLocation}
                 placeholder="לדוגמה: בית משפט שלום תל אביב"
-                placeholderTextColor={COLORS.gray[400]}
+                placeholderTextColor={Colors.gray400}
                 textAlign="right"
               />
             </View>
-          </View>
+          </Card>
 
           {/* Evidence + signature status */}
           <View style={styles.statusCard}>
@@ -796,229 +917,228 @@ export function ClaimDetailScreen({ route, navigation }: Props) {
 
           {/* Generate PDF button */}
           {!pdfGenerated ? (
-            <TouchableOpacity
-              style={[styles.pdfBtn, generatingPdf && styles.pdfBtnDisabled]}
+            <PrimaryButton
+              title="📄 צור כתב תביעה (PDF)"
               onPress={handleGeneratePdf}
               disabled={generatingPdf}
-            >
-              {generatingPdf ? (
-                <ActivityIndicator color={COLORS.white} />
-              ) : (
-                <Text style={styles.pdfBtnText}>📄 צור כתב תביעה (PDF)</Text>
-              )}
-            </TouchableOpacity>
+              loading={generatingPdf}
+            />
           ) : (
-            <View style={styles.pdfSuccessCard}>
+            <Card style={styles.pdfSuccessCard}>
               <Text style={styles.pdfSuccessIcon}>🎉</Text>
               <Text style={styles.pdfSuccessTitle}>כתב התביעה מוכן!</Text>
               <Text style={styles.pdfSuccessSub}>
                 שמור את הקובץ והגש אותו לבית המשפט לתביעות קטנות הקרוב לביתך, או העלה ל-נט המשפט.
               </Text>
-              <TouchableOpacity style={styles.shareBtn} onPress={handleSharePdf}>
-                <Text style={styles.shareBtnText}>📤 שתף / שמור PDF</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.mockTrialBtn}
+              <PrimaryButton
+                title="📤 שתף / שמור PDF"
+                onPress={handleSharePdf}
+                style={{ marginBottom: Spacing.sm }}
+              />
+              <SecondaryButton
+                title="⚖️ תרגל מוק-טריאל עם שופט AI"
                 onPress={() => navigation.navigate('MockTrial', { claimId })}
-              >
-                <Text style={styles.mockTrialBtnText}>⚖️ תרגל מוק-טריאל עם שופט AI</Text>
-              </TouchableOpacity>
-            </View>
+              />
+            </Card>
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: COLORS.gray[50] },
+  screen: { flex: 1, backgroundColor: Colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  header: {
-    flexDirection: 'row-reverse', alignItems: 'center',
-    justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: SPACING.md,
-  },
-  backBtn:     { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon:    { fontSize: 20, color: COLORS.white },
-  headerCenter:{ flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: COLORS.white },
-  typeBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: RADIUS.full,
-    paddingHorizontal: 8, paddingVertical: 2, marginTop: 4,
-  },
-  typeBadgeText: { fontSize: 11, color: COLORS.white, fontWeight: '600' },
-  trialBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: RADIUS.md,
-    paddingHorizontal: 10, paddingVertical: 6,
-  },
-  trialBtnText: { fontSize: 12, color: COLORS.white, fontWeight: '700' },
+  trialBtnIcon: { fontSize: 16 },
 
   summaryStrip: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: SPACING.sm,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.gray[100],
+    flexDirection: 'row-reverse', alignItems: 'center',
+    paddingHorizontal: SCREEN_PADDING, paddingVertical: Spacing.sm,
+    backgroundColor: Colors.white, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  summaryName: { flex: 1, fontSize: 13, fontWeight: '600', color: COLORS.gray[700], textAlign: 'right' },
-  badge: {
-    backgroundColor: COLORS.gray[200], borderRadius: RADIUS.full,
-    paddingHorizontal: 8, paddingVertical: 2,
+  summaryName: {
+    ...Typography.caption, fontWeight: '600',
+    color: Colors.gray700, textAlign: 'right', flex: 1,
   },
-  badgeGreen:  { backgroundColor: '#dcfce7' },
-  badgePurple: { backgroundColor: COLORS.primary[100] },
-  badgeText:   { fontSize: 11, fontWeight: '600', color: COLORS.gray[700] },
+  stripBadges: {
+    flexDirection: 'row-reverse', gap: Spacing.xs,
+  },
 
   tabBar: {
-    flexDirection: 'row-reverse', backgroundColor: COLORS.white,
-    borderBottomWidth: 1, borderBottomColor: COLORS.gray[200],
+    flexDirection: 'row-reverse', backgroundColor: Colors.white,
+    borderBottomWidth: 1, borderBottomColor: Colors.gray200,
   },
   tabItem: {
-    flex: 1, alignItems: 'center', paddingVertical: SPACING.sm + 2,
+    flex: 1, alignItems: 'center', paddingVertical: Spacing.sm + 2,
     borderBottomWidth: 3, borderBottomColor: 'transparent',
   },
-  tabItemActive: { borderBottomColor: COLORS.primary[600] },
+  tabItemActive: { borderBottomColor: Colors.primary },
   tabIcon:       { fontSize: 18, marginBottom: 2 },
-  tabLabel:      { fontSize: 12, fontWeight: '600', color: COLORS.gray[400] },
-  tabLabelActive:{ color: COLORS.primary[600] },
+  tabLabel:      { ...Typography.tiny, color: Colors.gray400 },
+  tabLabelActive:{ color: Colors.primary, fontWeight: '700' },
 
   tabContent: { flex: 1 },
-  tabPad:     { padding: SPACING.lg, paddingBottom: SPACING.xxl },
+  tabPad:     { padding: SCREEN_PADDING, paddingBottom: Spacing.xxl },
 
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: COLORS.gray[800], textAlign: 'right', marginBottom: SPACING.xs },
-  sectionSub:   { fontSize: 13, color: COLORS.gray[500], textAlign: 'right', marginBottom: SPACING.lg, lineHeight: 20 },
+  sectionTitle: { ...Typography.h3, color: Colors.gray800, textAlign: 'right', marginBottom: Spacing.xs },
+  sectionSub:   { ...Typography.caption, color: Colors.gray500, textAlign: 'right', marginBottom: Spacing.xl, lineHeight: 20 },
 
-  // Evidence
-  uploadRow: { flexDirection: 'row-reverse', gap: SPACING.md, marginBottom: SPACING.md },
+  // ── Overview tab ──
+  scoreCard: {
+    alignItems: 'center', marginBottom: Spacing.base,
+  },
+  scoreLabel: { ...Typography.small, color: Colors.muted, marginBottom: Spacing.sm },
+  scoreRow: {
+    flexDirection: 'row-reverse', alignItems: 'center',
+    gap: Spacing.xl, marginBottom: Spacing.base,
+  },
+  scoreInfo: { alignItems: 'center', gap: Spacing.sm },
+  strengthBadge: {
+    ...Typography.caption, fontWeight: '700',
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
+    borderRadius: Radius.full, overflow: 'hidden',
+  },
+  detailLink: { paddingVertical: Spacing.xs },
+  detailLinkText: { ...Typography.caption, color: Colors.primary, fontWeight: '700' },
+  scoreBarBg: {
+    width: '100%', height: 6, backgroundColor: Colors.gray200,
+    borderRadius: 3, overflow: 'hidden',
+  },
+  scoreBarFill: { height: '100%', borderRadius: 3 },
+
+  sectionCard: { marginBottom: Spacing.md },
+  sectionCardTitle: {
+    ...Typography.bodyMedium, fontWeight: '700',
+    color: Colors.gray800, textAlign: 'right', marginBottom: Spacing.sm,
+  },
+  sectionCardText: {
+    ...Typography.small, color: Colors.gray600,
+    textAlign: 'right', lineHeight: 22,
+  },
+
+  timelineRow: {
+    flexDirection: 'row-reverse', alignItems: 'flex-start',
+    marginBottom: Spacing.sm, gap: Spacing.sm,
+  },
+  timelineDot: {
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: Colors.primary, marginTop: 5,
+  },
+  timelineContent: { flex: 1 },
+  timelineDate: { ...Typography.tiny, fontWeight: '700', color: Colors.primary, textAlign: 'right' },
+  timelineDesc: { ...Typography.caption, color: Colors.gray600, textAlign: 'right', lineHeight: 20 },
+
+  demandRow: { flexDirection: 'row-reverse', marginBottom: Spacing.xs, gap: Spacing.xs },
+  demandBullet: { ...Typography.small, color: Colors.primary, fontWeight: '700' },
+  demandText: { ...Typography.small, color: Colors.gray700, textAlign: 'right', lineHeight: 22, flex: 1 },
+
+  riskCard: { borderColor: Colors.warningLight, backgroundColor: '#FFFBEB' },
+  missingCard: { borderColor: Colors.dangerLight, backgroundColor: '#FEF2F2' },
+  suggestCard: { borderColor: Colors.primaryLight, backgroundColor: Colors.primaryLight },
+
+  flagRow: {
+    flexDirection: 'row-reverse', alignItems: 'flex-start',
+    gap: Spacing.sm, marginBottom: Spacing.sm,
+  },
+  flagIcon: { fontSize: 14, marginTop: 2 },
+  flagContent: { flex: 1 },
+  flagTitle: { ...Typography.caption, fontWeight: '600', color: Colors.gray700, textAlign: 'right' },
+  flagDesc: { ...Typography.tiny, color: Colors.gray500, textAlign: 'right', lineHeight: 18, marginTop: 2 },
+
+  // ── Evidence tab ──
+  uploadRow: { flexDirection: 'row-reverse', gap: Spacing.base, marginBottom: Spacing.base },
   uploadBtn: {
     flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.white, borderRadius: RADIUS.lg, paddingVertical: SPACING.md,
-    borderWidth: 2, borderColor: COLORS.primary[200], borderStyle: 'dashed',
-    gap: 4,
+    backgroundColor: Colors.white, borderRadius: Radius.lg, paddingVertical: Spacing.base,
+    borderWidth: 2, borderColor: Colors.primaryMid + '60', borderStyle: 'dashed',
+    gap: 4, ...Shadows.sm,
   },
   uploadBtnDisabled: { opacity: 0.5 },
   uploadBtnIcon:     { fontSize: 24 },
-  uploadBtnText:     { fontSize: 13, fontWeight: '700', color: COLORS.primary[600] },
+  uploadBtnText:     { ...Typography.caption, fontWeight: '700', color: Colors.primary },
 
   uploadingRow: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: SPACING.sm,
-    padding: SPACING.sm, marginBottom: SPACING.md,
+    flexDirection: 'row-reverse', alignItems: 'center', gap: Spacing.sm,
+    padding: Spacing.sm, marginBottom: Spacing.base,
   },
-  uploadingText: { fontSize: 13, color: COLORS.gray[600] },
+  uploadingText: { ...Typography.caption, color: Colors.gray600 },
 
   emptyState: {
-    alignItems: 'center', paddingVertical: SPACING.xxl,
-    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
+    alignItems: 'center', paddingVertical: Spacing.xxl,
+    backgroundColor: Colors.white, borderRadius: Radius.xl,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  emptyIcon: { fontSize: 48, marginBottom: SPACING.sm },
-  emptyText: { fontSize: 16, fontWeight: '700', color: COLORS.gray[600] },
-  emptySub:  { fontSize: 13, color: COLORS.gray[400], textAlign: 'center', marginTop: SPACING.xs, paddingHorizontal: SPACING.xl },
+  emptyIcon: { fontSize: 48, marginBottom: Spacing.sm },
+  emptyText: { ...Typography.body, fontWeight: '700', color: Colors.gray600 },
+  emptySub:  { ...Typography.caption, color: Colors.gray400, textAlign: 'center', marginTop: Spacing.xs, paddingHorizontal: Spacing.xl },
 
-  evidenceGrid: { gap: SPACING.sm, marginBottom: SPACING.lg },
+  evidenceGrid: { gap: Spacing.sm, marginBottom: Spacing.base },
   evidenceCard: {
-    flexDirection: 'row-reverse', backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    flexDirection: 'row-reverse', overflow: 'hidden',
   },
   evidenceThumb: { width: 70, height: 70 },
-  evidenceInfo:  { flex: 1, padding: SPACING.sm, justifyContent: 'center' },
-  evidenceName:  { fontSize: 13, fontWeight: '600', color: COLORS.gray[700], textAlign: 'right' },
-  evidenceDate:  { fontSize: 11, color: COLORS.gray[400], textAlign: 'right', marginTop: 2 },
+  evidenceInfo:  { flex: 1, padding: Spacing.sm, justifyContent: 'center' },
+  evidenceName:  { ...Typography.caption, fontWeight: '600', color: Colors.gray700, textAlign: 'right' },
+  evidenceDate:  { ...Typography.tiny, color: Colors.gray400, textAlign: 'right', marginTop: 2 },
   evidenceDelete:{ width: 44, alignItems: 'center', justifyContent: 'center' },
   evidenceDeleteIcon: { fontSize: 18 },
 
-  continueBtn: {
-    backgroundColor: COLORS.primary[600], borderRadius: RADIUS.md,
-    padding: SPACING.md, alignItems: 'center', marginTop: SPACING.lg,
-  },
-  continueBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 15 },
-
-  // Signature
+  // ── Signature tab ──
   sigTabContainer: { flex: 1 },
   sigWrapper:      { flex: 1 },
   sigCanvas:       { flex: 1 },
 
   sigSavedBox: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl,
+    flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl,
   },
-  sigSavedImg:   { width: 240, height: 100, borderWidth: 1, borderColor: COLORS.gray[200], borderRadius: RADIUS.md },
-  sigSavedLabel: { fontSize: 16, fontWeight: '700', color: COLORS.success, marginTop: SPACING.md },
-  sigClearBtn: {
-    marginTop: SPACING.md, backgroundColor: COLORS.gray[200],
-    borderRadius: RADIUS.md, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
-  },
-  sigClearBtnText: { fontSize: 14, fontWeight: '600', color: COLORS.gray[700] },
+  sigSavedImg:   { width: 240, height: 100, borderWidth: 1, borderColor: Colors.gray200, borderRadius: Radius.md },
+  sigSavedLabel: { ...Typography.body, fontWeight: '700', color: Colors.success, marginTop: Spacing.base },
 
   savingOverlay: {
     position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.8)',
-    alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
+    alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
-  savingText: { fontSize: 14, color: COLORS.gray[600] },
+  savingText: { ...Typography.small, color: Colors.gray600 },
 
   webSigPlaceholder: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: SPACING.xl, gap: SPACING.md,
+    padding: Spacing.xl, gap: Spacing.base,
   },
   webSigIcon:  { fontSize: 56 },
-  webSigTitle: { fontSize: 18, fontWeight: '700', color: COLORS.gray[700], textAlign: 'center' },
-  webSigSub:   { fontSize: 14, color: COLORS.gray[500], textAlign: 'center', lineHeight: 22 },
+  webSigTitle: { ...Typography.bodyLarge, color: Colors.gray700, textAlign: 'center' },
+  webSigSub:   { ...Typography.small, color: Colors.gray500, textAlign: 'center', lineHeight: 22 },
 
-  // PDF form
-  formCard: {
-    backgroundColor: COLORS.white, borderRadius: RADIUS.xl, padding: SPACING.lg,
-    marginBottom: SPACING.md,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-  },
-  formCardTitle: { fontSize: 14, fontWeight: '800', color: COLORS.gray[700], textAlign: 'right', marginBottom: SPACING.md },
-  inputWrap:     { marginBottom: SPACING.sm },
-  inputLabel:    { fontSize: 12, fontWeight: '600', color: COLORS.gray[500], textAlign: 'right', marginBottom: 4 },
+  // ── PDF tab ──
+  formCard: { marginBottom: Spacing.base },
+  formCardTitle: { ...Typography.small, fontWeight: '800', color: Colors.gray700, textAlign: 'right', marginBottom: Spacing.base },
+  inputWrap:     { marginBottom: Spacing.sm },
+  inputLabel:    { ...Typography.tiny, fontWeight: '600', color: Colors.gray500, textAlign: 'right', marginBottom: 4 },
   input: {
-    backgroundColor: COLORS.gray[50], borderRadius: RADIUS.sm,
-    borderWidth: 1.5, borderColor: COLORS.gray[200],
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm + 2,
-    fontSize: 14, color: COLORS.gray[800],
+    backgroundColor: Colors.gray50, borderRadius: Radius.sm,
+    borderWidth: 1.5, borderColor: Colors.gray200,
+    paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm + 2,
+    ...Typography.small, color: Colors.gray800,
   },
 
   statusCard: {
-    backgroundColor: COLORS.primary[50], borderRadius: RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.lg, gap: SPACING.xs,
-    borderWidth: 1, borderColor: COLORS.primary[100],
+    backgroundColor: Colors.primaryLight, borderRadius: Radius.md,
+    padding: Spacing.base, marginBottom: Spacing.xl, gap: Spacing.xs,
+    borderWidth: 1, borderColor: Colors.primaryMid + '40',
   },
-  statusRow:  { flexDirection: 'row-reverse', alignItems: 'center', gap: SPACING.sm },
+  statusRow:  { flexDirection: 'row-reverse', alignItems: 'center', gap: Spacing.sm },
   statusIcon: { fontSize: 16 },
-  statusText: { fontSize: 13, color: COLORS.primary[700], fontWeight: '600' },
-
-  pdfBtn: {
-    backgroundColor: COLORS.primary[600], borderRadius: RADIUS.md,
-    padding: SPACING.md + 2, alignItems: 'center',
-  },
-  pdfBtnDisabled: { opacity: 0.6 },
-  pdfBtnText:     { color: COLORS.white, fontWeight: '700', fontSize: 16 },
+  statusText: { ...Typography.caption, color: Colors.primaryDark, fontWeight: '600' },
 
   pdfSuccessCard: {
-    backgroundColor: COLORS.white, borderRadius: RADIUS.xl, padding: SPACING.xl,
-    alignItems: 'center', borderWidth: 2, borderColor: COLORS.primary[200],
-    shadowColor: '#000', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
+    alignItems: 'center', borderWidth: 2, borderColor: Colors.primaryMid + '40',
   },
-  pdfSuccessIcon:  { fontSize: 48, marginBottom: SPACING.sm },
-  pdfSuccessTitle: { fontSize: 22, fontWeight: '800', color: COLORS.gray[800], marginBottom: SPACING.xs },
+  pdfSuccessIcon:  { fontSize: 48, marginBottom: Spacing.sm },
+  pdfSuccessTitle: { ...Typography.h2, color: Colors.gray800, marginBottom: Spacing.xs },
   pdfSuccessSub: {
-    fontSize: 13, color: COLORS.gray[500], textAlign: 'center',
-    lineHeight: 22, marginBottom: SPACING.lg,
+    ...Typography.caption, color: Colors.muted,
+    textAlign: 'center', lineHeight: 22, marginBottom: Spacing.xl,
   },
-  shareBtn: {
-    backgroundColor: COLORS.primary[600], borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.md,
-    width: '100%', alignItems: 'center', marginBottom: SPACING.sm,
-  },
-  shareBtnText:    { color: COLORS.white, fontWeight: '700', fontSize: 15 },
-  mockTrialBtn: {
-    backgroundColor: COLORS.primary[50], borderRadius: RADIUS.md, borderWidth: 1,
-    borderColor: COLORS.primary[300], paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm + 4, width: '100%', alignItems: 'center',
-  },
-  mockTrialBtnText: { color: COLORS.primary[700], fontWeight: '700', fontSize: 14 },
 });

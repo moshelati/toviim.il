@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { COLORS, RADIUS, SPACING } from '../../constants/theme';
+import { Colors, Radius, Spacing } from '../../theme';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type Size    = 'sm' | 'md' | 'lg';
@@ -60,7 +60,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? COLORS.primary[600] : COLORS.white}
+          color={variant === 'outline' || variant === 'ghost' ? Colors.primary : Colors.white}
           size="small"
         />
       ) : (
@@ -75,31 +75,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: RADIUS.md,
+    borderRadius: Radius.button,
   },
   fullWidth: { width: '100%' },
   disabled: { opacity: 0.55 },
 
   // Sizes
-  size_sm: { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm - 2, minHeight: 36 },
-  size_md: { paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm + 4, minHeight: 48 },
-  size_lg: { paddingHorizontal: SPACING.xl, paddingVertical: SPACING.md, minHeight: 56 },
+  size_sm: { paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm - 2, minHeight: 36 },
+  size_md: { paddingHorizontal: Spacing.xl,   paddingVertical: Spacing.sm + 4, minHeight: 48 },
+  size_lg: { paddingHorizontal: Spacing.xxl,  paddingVertical: Spacing.md,     minHeight: 56 },
 
   // Variants
-  variant_primary:   { backgroundColor: COLORS.primary[600] },
-  variant_secondary: { backgroundColor: COLORS.primary[100] },
-  variant_outline:   { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: COLORS.primary[600] },
+  variant_primary:   { backgroundColor: Colors.primary },
+  variant_secondary: { backgroundColor: Colors.primaryLight },
+  variant_outline:   { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.primary },
   variant_ghost:     { backgroundColor: 'transparent' },
-  variant_danger:    { backgroundColor: COLORS.danger },
+  variant_danger:    { backgroundColor: Colors.danger },
 
   // Labels
   label: { fontWeight: '600', textAlign: 'center' },
   labelSize_sm: { fontSize: 13 },
   labelSize_md: { fontSize: 15 },
   labelSize_lg: { fontSize: 17 },
-  labelVariant_primary:   { color: COLORS.white },
-  labelVariant_secondary: { color: COLORS.primary[700] },
-  labelVariant_outline:   { color: COLORS.primary[600] },
-  labelVariant_ghost:     { color: COLORS.primary[600] },
-  labelVariant_danger:    { color: COLORS.white },
+  labelVariant_primary:   { color: Colors.white },
+  labelVariant_secondary: { color: Colors.primaryDark },
+  labelVariant_outline:   { color: Colors.primary },
+  labelVariant_ghost:     { color: Colors.primary },
+  labelVariant_danger:    { color: Colors.white },
 });

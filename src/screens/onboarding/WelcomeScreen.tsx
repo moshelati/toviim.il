@@ -1,44 +1,37 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  StatusBar,
-  I18nManager,
-  ScrollView,
+  View, Text, StyleSheet, Animated, Dimensions,
+  StatusBar, I18nManager, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
-import { Button } from '../../components/ui/Button';
-import { COLORS, SPACING } from '../../constants/theme';
+import { Colors, Typography, Spacing, Radius, SCREEN_PADDING, BUTTON_HEIGHT } from '../../theme';
 
-// Force RTL layout
 I18nManager.forceRTL(true);
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
-
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export function WelcomeScreen({ navigation }: Props) {
-  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 700, useNativeDriver: true, delay: 100 }),
     ]).start();
   }, []);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary[700]} />
+      <StatusBar barStyle="light-content" />
 
       <LinearGradient
-        colors={[COLORS.primary[700], COLORS.primary[500], '#a78bfa']}
+        colors={Colors.gradientHero}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -49,59 +42,62 @@ export function WelcomeScreen({ navigation }: Props) {
       <View style={[styles.circle, styles.circleBottom]} />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
+        ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <Animated.View
           style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
         >
-          {/* Logo / Icon */}
+          {/* Logo */}
           <View style={styles.logoWrap}>
-            <Text style={styles.logoEmoji}>⚖️</Text>
+            <Text style={styles.logoEmoji}>{'\u2696\uFE0F'}</Text>
           </View>
 
           {/* Headline */}
-          <Text style={styles.title}>תוביים.il</Text>
+          <Text style={styles.title}>{'\u05EA\u05D5\u05D1\u05D9\u05D9\u05DD.il'}</Text>
           <Text style={styles.subtitle}>
-            העוזר המשפטי החכם שלך{'\n'}לתביעות קטנות
+            {'\u05D4\u05E2\u05D5\u05D6\u05E8 \u05D4\u05DE\u05E9\u05E4\u05D8\u05D9 \u05D4\u05D7\u05DB\u05DD \u05E9\u05DC\u05DA'}{'\n'}{'\u05DC\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA'}
           </Text>
 
           {/* Features */}
           <View style={styles.features}>
             {[
-              { icon: '🤖', text: 'ראיון AI אישי לבניית התיק שלך' },
-              { icon: '📄', text: 'יצירת כתב תביעה אוטומטי' },
-              { icon: '🎯', text: 'הכנה לדיון עם סימולציית בית משפט' },
+              { icon: '\uD83E\uDD16', text: '\u05E8\u05D0\u05D9\u05D5\u05DF AI \u05D0\u05D9\u05E9\u05D9 \u05DC\u05D1\u05E0\u05D9\u05D9\u05EA \u05D4\u05EA\u05D9\u05E7 \u05E9\u05DC\u05DA' },
+              { icon: '\uD83D\uDCCA', text: '\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA \u05D5\u05E0\u05D9\u05EA\u05D5\u05D7 \u05D7\u05D5\u05D6\u05E7 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4' },
+              { icon: '\uD83D\uDCC4', text: '\u05D9\u05E6\u05D9\u05E8\u05EA \u05DB\u05EA\u05D1 \u05EA\u05D1\u05D9\u05E2\u05D4 (\u05D8\u05D5\u05E4\u05E1 1) \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9' },
+              { icon: '\u2696\uFE0F', text: '\u05D4\u05DB\u05E0\u05D4 \u05DC\u05D3\u05D9\u05D5\u05DF \u05E2\u05DD \u05E1\u05D9\u05DE\u05D5\u05DC\u05E6\u05D9\u05D9\u05EA \u05E9\u05D5\u05E4\u05D8 AI' },
             ].map((f, i) => (
               <View key={i} style={styles.featureRow}>
-                <Text style={styles.featureText}>{f.text}</Text>
                 <Text style={styles.featureIcon}>{f.icon}</Text>
+                <Text style={styles.featureText}>{f.text}</Text>
               </View>
             ))}
           </View>
 
-          {/* CTA Buttons */}
+          {/* CTA */}
           <View style={styles.buttons}>
-            <Button
-              label="התחל עכשיו - זה חינם"
-              onPress={() => navigation.navigate('Disclaimer')}
-              size="lg"
+            <TouchableOpacity
               style={styles.btnPrimary}
-              textStyle={{ color: COLORS.primary[700], fontWeight: '700' }}
-            />
-            <Button
-              label="כבר יש לי חשבון"
-              onPress={() => navigation.navigate('Login')}
-              variant="outline"
-              size="lg"
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Disclaimer')}
+            >
+              <Text style={styles.btnPrimaryText}>{'\u05D4\u05EA\u05D7\u05DC \u05E2\u05DB\u05E9\u05D9\u05D5 \u2014 \u05D6\u05D4 \u05D7\u05D9\u05E0\u05DD'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.btnSecondary}
-              textStyle={{ color: COLORS.white }}
-            />
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Login')}
+            >
+              <Text style={styles.btnSecondaryText}>{'\u05DB\u05D1\u05E8 \u05D9\u05E9 \u05DC\u05D9 \u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.disclaimer}>
-            אין צורך בכרטיס אשראי · 100% חינם
+            {'\u05D0\u05D9\u05DF \u05E6\u05D5\u05E8\u05DA \u05D1\u05DB\u05E8\u05D8\u05D9\u05E1 \u05D0\u05E9\u05E8\u05D0\u05D9 \u00B7 100% \u05D7\u05D9\u05E0\u05DD'}
           </Text>
         </Animated.View>
       </ScrollView>
@@ -110,93 +106,100 @@ export function WelcomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.primary[700] },
-  gradient:  { ...StyleSheet.absoluteFillObject },
+  container: { flex: 1, backgroundColor: Colors.primaryDark },
+  gradient: { ...StyleSheet.absoluteFillObject },
 
   circle: {
-    position: 'absolute',
-    borderRadius: 9999,
+    position: 'absolute', borderRadius: 9999,
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   circleTop: {
-    width: width * 1.2,
-    height: width * 1.2,
-    top: -width * 0.5,
-    left: -width * 0.1,
+    width: width * 1.2, height: width * 1.2,
+    top: -width * 0.5, left: -width * 0.1,
   },
   circleBottom: {
-    width: width * 0.9,
-    height: width * 0.9,
-    bottom: -width * 0.4,
-    right: -width * 0.3,
+    width: width * 0.9, height: width * 0.9,
+    bottom: -width * 0.4, right: -width * 0.3,
   },
 
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.xl,
-    paddingBottom: SPACING.xl,
-  },
+  scrollContent: { flexGrow: 1, justifyContent: 'center' },
+  content: { alignItems: 'center', paddingHorizontal: SCREEN_PADDING },
 
   logoWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 80, height: 80, borderRadius: 40,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.lg,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: Spacing.xl,
   },
   logoEmoji: { fontSize: 40 },
 
   title: {
+    ...Typography.h1,
     fontSize: 36,
-    fontWeight: '800',
-    color: COLORS.white,
+    color: Colors.white,
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 17,
+    ...Typography.bodyLarge,
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
-    marginTop: SPACING.sm,
+    marginTop: Spacing.sm,
     lineHeight: 26,
+    fontWeight: '500',
   },
 
   features: {
     width: '100%',
-    marginTop: SPACING.xl,
-    marginBottom: SPACING.xl,
+    marginTop: Spacing.xxl,
+    marginBottom: Spacing.xxl,
     backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 16,
-    padding: SPACING.md,
-    gap: SPACING.sm,
+    borderRadius: Radius.lg,
+    padding: Spacing.base,
+    gap: Spacing.md,
   },
   featureRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: Spacing.md,
   },
   featureIcon: { fontSize: 22 },
-  featureText: { fontSize: 15, color: COLORS.white, fontWeight: '500', flex: 1, textAlign: 'right' },
+  featureText: {
+    ...Typography.bodyMedium,
+    color: Colors.white,
+    flex: 1,
+    textAlign: 'right',
+  },
 
-  buttons: { width: '100%', gap: SPACING.sm },
+  buttons: { width: '100%', gap: Spacing.sm },
   btnPrimary: {
-    backgroundColor: COLORS.white,
+    height: BUTTON_HEIGHT,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnPrimaryText: {
+    ...Typography.buttonLarge,
+    color: Colors.primaryDark,
   },
   btnSecondary: {
-    borderColor: 'rgba(255,255,255,0.6)',
+    height: BUTTON_HEIGHT,
+    borderRadius: Radius.button,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnSecondaryText: {
+    ...Typography.buttonLarge,
+    color: Colors.white,
   },
 
   disclaimer: {
-    marginTop: SPACING.md,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    ...Typography.tiny,
+    color: 'rgba(255,255,255,0.55)',
     textAlign: 'center',
+    marginTop: Spacing.base,
   },
 });

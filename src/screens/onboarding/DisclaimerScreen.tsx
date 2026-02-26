@@ -5,31 +5,31 @@ import {
   ScrollView,
   StyleSheet,
   StatusBar,
-  TouchableOpacity,
   Animated,
-  SafeAreaView,
-  Linking,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { Button } from '../../components/ui/Button';
 import { Checkbox } from '../../components/ui/Checkbox';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { AppHeader } from '../../components/ui/AppHeader';
+import { Colors, Typography, Spacing, Radius, SCREEN_PADDING } from '../../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Disclaimer'>;
 
 export function DisclaimerScreen({ navigation }: Props) {
-  const [checked1, setChecked1] = useState(false); // Main AI disclaimer
-  const [checked2, setChecked2] = useState(false); // Terms of Service
-  const [checked3, setChecked3] = useState(false); // Privacy Policy
+  const insets = useSafeAreaInsets();
+  const [checked1, setChecked1] = useState(false);
+  const [checked2, setChecked2] = useState(false);
+  const [checked3, setChecked3] = useState(false);
+  const [checked4, setChecked4] = useState(false);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
-  const allChecked = checked1 && checked2 && checked3;
+  const allChecked = checked1 && checked2 && checked3 && checked4;
 
   function handleContinue() {
     if (!allChecked) {
-      // Shake animation to draw attention to unchecked boxes
       Animated.sequence([
         Animated.timing(shakeAnim, { toValue: 8,  duration: 60, useNativeDriver: true }),
         Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
@@ -43,56 +43,52 @@ export function DisclaimerScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>→</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>לפני שמתחילים</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader
+        title={'\u05DC\u05E4\u05E0\u05D9 \u05E9\u05DE\u05EA\u05D7\u05D9\u05DC\u05D9\u05DD'}
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xxl }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Warning banner */}
         <View style={styles.warningBanner}>
-          <Text style={styles.warningIcon}>⚠️</Text>
-          <Text style={styles.warningTitle}>הצהרה משפטית חשובה</Text>
+          <Text style={styles.warningIcon}>{'\u26A0\uFE0F'}</Text>
+          <Text style={styles.warningTitle}>{'\u05D4\u05E6\u05D4\u05E8\u05D4 \u05DE\u05E9\u05E4\u05D8\u05D9\u05EA \u05D7\u05E9\u05D5\u05D1\u05D4'}</Text>
           <Text style={styles.warningText}>
-            האפליקציה הזו משתמשת בבינה מלאכותית (AI) לצורך סיוע בהכנת תביעות קטנות.
+            {'\u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05D4\u05D6\u05D5 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1\u05D1\u05D9\u05E0\u05D4 \u05DE\u05DC\u05D0\u05DB\u05D5\u05EA\u05D9\u05EA (AI) \u05DC\u05E6\u05D5\u05E8\u05DA \u05E1\u05D9\u05D5\u05E2 \u05D1\u05D4\u05DB\u05E0\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA.'}
           </Text>
         </View>
 
         {/* Disclaimer box */}
         <View style={styles.disclaimerBox}>
-          <Text style={styles.disclaimerTitle}>📋 מה שאת/ה צריכ/ה לדעת</Text>
+          <Text style={styles.disclaimerTitle}>{'\uD83D\uDCCB \u05DE\u05D4 \u05E9\u05D0\u05EA/\u05D4 \u05E6\u05E8\u05D9\u05DB/\u05D4 \u05DC\u05D3\u05E2\u05EA'}</Text>
 
           {[
             {
-              icon: '🤖',
-              title: 'זה לא עורך דין',
-              body: 'AI אינו מחליף ייעוץ משפטי מקצועי. האפליקציה עוזרת לארגן מידע, אך אינה מספקת ייעוץ משפטי מחייב.',
+              icon: '\uD83E\uDD16',
+              title: '\u05D6\u05D4 \u05DC\u05D0 \u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF',
+              body: 'AI \u05D0\u05D9\u05E0\u05D5 \u05DE\u05D7\u05DC\u05D9\u05E3 \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9. \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05E2\u05D5\u05D6\u05E8\u05EA \u05DC\u05D0\u05E8\u05D2\u05DF \u05DE\u05D9\u05D3\u05E2, \u05D0\u05DA \u05D0\u05D9\u05E0\u05D4 \u05DE\u05E1\u05E4\u05E7\u05EA \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05D7\u05D9\u05D9\u05D1.',
             },
             {
-              icon: '⚖️',
-              title: 'אחריות אישית',
-              body: 'אתה/את אחראי/ת לנכונות המידע שתמסור/י. הגשת מידע שגוי בבית משפט עלולה להיות בעייתית.',
+              icon: '\u2696\uFE0F',
+              title: '\u05D0\u05D7\u05E8\u05D9\u05D5\u05EA \u05D0\u05D9\u05E9\u05D9\u05EA',
+              body: '\u05D0\u05EA\u05D4/\u05D0\u05EA \u05D0\u05D7\u05E8\u05D0\u05D9/\u05EA \u05DC\u05E0\u05DB\u05D5\u05E0\u05D5\u05EA \u05D4\u05DE\u05D9\u05D3\u05E2 \u05E9\u05EA\u05DE\u05E1\u05D5\u05E8/\u05D9. \u05D4\u05D2\u05E9\u05EA \u05DE\u05D9\u05D3\u05E2 \u05E9\u05D2\u05D5\u05D9 \u05D1\u05D1\u05D9\u05EA \u05DE\u05E9\u05E4\u05D8 \u05E2\u05DC\u05D5\u05DC\u05D4 \u05DC\u05D4\u05D9\u05D5\u05EA \u05D1\u05E2\u05D9\u05D9\u05EA\u05D9\u05EA.',
             },
             {
-              icon: '🔒',
-              title: 'פרטיות הנתונים',
-              body: 'פרטיך נשמרים בצורה מוצפנת בשרתי Firebase. המידע לא יועבר לצד שלישי ללא הסכמתך.',
+              icon: '\uD83D\uDD12',
+              title: '\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA \u05D4\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD',
+              body: '\u05E4\u05E8\u05D8\u05D9\u05DA \u05E0\u05E9\u05DE\u05E8\u05D9\u05DD \u05D1\u05E6\u05D5\u05E8\u05D4 \u05DE\u05D5\u05E6\u05E4\u05E0\u05EA \u05D1\u05E9\u05E8\u05EA\u05D9 Firebase. \u05D4\u05DE\u05D9\u05D3\u05E2 \u05DC\u05D0 \u05D9\u05D5\u05E2\u05D1\u05E8 \u05DC\u05E6\u05D3 \u05E9\u05DC\u05D9\u05E9\u05D9 \u05DC\u05DC\u05D0 \u05D4\u05E1\u05DB\u05DE\u05EA\u05DA.',
             },
             {
-              icon: '💡',
-              title: 'הגבלת תביעות קטנות',
-              body: 'שירות תביעות קטנות מיועד לסכומים עד 38,800 ₪. מקרים מעבר לכך יש להגיש בבית משפט שלום.',
+              icon: '\uD83D\uDCA1',
+              title: '\u05D4\u05D2\u05D1\u05DC\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA',
+              body: '\u05E9\u05D9\u05E8\u05D5\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA \u05DE\u05D9\u05D5\u05E2\u05D3 \u05DC\u05E1\u05DB\u05D5\u05DE\u05D9\u05DD \u05E2\u05D3 38,800 \u20AA. \u05DE\u05E7\u05E8\u05D9\u05DD \u05DE\u05E2\u05D1\u05E8 \u05DC\u05DB\u05DA \u05D9\u05E9 \u05DC\u05D4\u05D2\u05D9\u05E9 \u05D1\u05D1\u05D9\u05EA \u05DE\u05E9\u05E4\u05D8 \u05E9\u05DC\u05D5\u05DD.',
             },
           ].map((item, i) => (
             <View key={i} style={styles.infoRow}>
@@ -109,15 +105,15 @@ export function DisclaimerScreen({ navigation }: Props) {
         <Animated.View
           style={[styles.checkboxSection, { transform: [{ translateX: shakeAnim }] }]}
         >
-          <Text style={styles.checkboxTitle}>אנא אשר/י את כל הסעיפים:</Text>
+          <Text style={styles.checkboxTitle}>{'\u05D0\u05E0\u05D0 \u05D0\u05E9\u05E8/\u05D9 \u05D0\u05EA \u05DB\u05DC \u05D4\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD:'}</Text>
 
           <Checkbox
             checked={checked1}
             onToggle={() => setChecked1(!checked1)}
             label={
               <Text style={styles.checkboxLabel}>
-                <Text style={styles.checkboxLabelBold}>הבנתי: </Text>
-                האפליקציה משתמשת ב-AI ואינה מחליפה עורך דין. אני משתמש/ת בשירות על אחריותי האישית.
+                <Text style={styles.checkboxLabelBold}>{'\u05D4\u05D1\u05E0\u05EA\u05D9: '}</Text>
+                {'\u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1-AI \u05D5\u05D0\u05D9\u05E0\u05D4 \u05DE\u05D7\u05DC\u05D9\u05E4\u05D4 \u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF. \u05D0\u05E0\u05D9 \u05DE\u05E9\u05EA\u05DE\u05E9/\u05EA \u05D1\u05E9\u05D9\u05E8\u05D5\u05EA \u05E2\u05DC \u05D0\u05D7\u05E8\u05D9\u05D5\u05EA\u05D9 \u05D4\u05D0\u05D9\u05E9\u05D9\u05EA.'}
               </Text>
             }
           />
@@ -129,14 +125,14 @@ export function DisclaimerScreen({ navigation }: Props) {
             onToggle={() => setChecked2(!checked2)}
             label={
               <Text style={styles.checkboxLabel}>
-                {'קראתי ואני מסכימ/ה ל'}
+                {'\u05E7\u05E8\u05D0\u05EA\u05D9 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC'}
                 <Text
                   style={styles.link}
-                  onPress={() => Linking.openURL('https://toviim.il/terms')}
+                  onPress={() => navigation.navigate('Terms')}
                 >
-                  תנאי השירות
+                  {'\u05EA\u05E0\u05D0\u05D9 \u05D4\u05E9\u05D9\u05E8\u05D5\u05EA'}
                 </Text>
-                {' של האפליקציה.'}
+                {' \u05E9\u05DC \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4.'}
               </Text>
             }
           />
@@ -148,25 +144,38 @@ export function DisclaimerScreen({ navigation }: Props) {
             onToggle={() => setChecked3(!checked3)}
             label={
               <Text style={styles.checkboxLabel}>
-                {'קראתי ואני מסכימ/ה ל'}
+                {'\u05E7\u05E8\u05D0\u05EA\u05D9 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC'}
                 <Text
                   style={styles.link}
-                  onPress={() => Linking.openURL('https://toviim.il/privacy')}
+                  onPress={() => navigation.navigate('Privacy')}
                 >
-                  מדיניות הפרטיות
+                  {'\u05DE\u05D3\u05D9\u05E0\u05D9\u05D5\u05EA \u05D4\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA'}
                 </Text>
-                {' ולאיסוף הנתונים המתואר בה.'}
+                {' \u05D5\u05DC\u05D0\u05D9\u05E1\u05D5\u05E3 \u05D4\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05D4\u05DE\u05EA\u05D5\u05D0\u05E8 \u05D1\u05D4.'}
+              </Text>
+            }
+          />
+
+          <View style={styles.divider} />
+
+          <Checkbox
+            checked={checked4}
+            onToggle={() => setChecked4(!checked4)}
+            label={
+              <Text style={styles.checkboxLabel}>
+                <Text style={styles.checkboxLabelBold}>AI: </Text>
+                {'\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC\u05E9\u05D9\u05DE\u05D5\u05E9 \u05D1\u05D1\u05D9\u05E0\u05D4 \u05DE\u05DC\u05D0\u05DB\u05D5\u05EA\u05D9\u05EA (AI) \u05DC\u05E2\u05D9\u05D1\u05D5\u05D3 \u05D4\u05DE\u05D9\u05D3\u05E2 \u05E9\u05D0\u05DE\u05E1\u05D5\u05E8, \u05D1\u05D4\u05EA\u05D0\u05DD \u05DC\u05DE\u05D3\u05D9\u05E0\u05D9\u05D5\u05EA \u05D4\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA.'}
               </Text>
             }
           />
         </Animated.View>
 
         {!allChecked && (
-          <Text style={styles.checkAllHint}>יש לסמן את כל התיבות כדי להמשיך</Text>
+          <Text style={styles.checkAllHint}>{'\u05D9\u05E9 \u05DC\u05E1\u05DE\u05DF \u05D0\u05EA \u05DB\u05DC \u05D4\u05EA\u05D9\u05D1\u05D5\u05EA \u05DB\u05D3\u05D9 \u05DC\u05D4\u05DE\u05E9\u05D9\u05DA'}</Text>
         )}
 
         <Button
-          label="אני מסכימ/ה - בוא/י נתחיל"
+          label={'\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 - \u05D1\u05D5\u05D0/\u05D9 \u05E0\u05EA\u05D7\u05D9\u05DC'}
           onPress={handleContinue}
           size="lg"
           disabled={!allChecked}
@@ -174,99 +183,95 @@ export function DisclaimerScreen({ navigation }: Props) {
         />
 
         <Text style={styles.footerNote}>
-          בלחיצה על הכפתור אתה/את מאשר/ת שקראת את כל הסעיפים לעיל.
+          {'\u05D1\u05DC\u05D7\u05D9\u05E6\u05D4 \u05E2\u05DC \u05D4\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D0\u05EA\u05D4/\u05D0\u05EA \u05DE\u05D0\u05E9\u05E8/\u05EA \u05E9\u05E7\u05E8\u05D0\u05EA \u05D0\u05EA \u05DB\u05DC \u05D4\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD \u05DC\u05E2\u05D9\u05DC.'}
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe:         { flex: 1, backgroundColor: COLORS.white },
+  container:    { flex: 1, backgroundColor: Colors.white },
   scroll:       { flex: 1 },
-  scrollContent:{ padding: SPACING.lg, paddingBottom: SPACING.xxl },
-
-  header: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray[100],
-  },
-  backBtn: {
-    width: 40, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  backIcon: { fontSize: 20, color: COLORS.primary[600] },
-  headerTitle: {
-    fontSize: 18, fontWeight: '700', color: COLORS.gray[800],
-  },
+  scrollContent:{ padding: SCREEN_PADDING },
 
   warningBanner: {
-    backgroundColor: '#fef3c7',
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
+    backgroundColor: Colors.warningLight,
+    borderRadius: Radius.md,
+    padding: Spacing.base,
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: '#fde68a',
+    borderColor: Colors.warning + '40',
   },
-  warningIcon:  { fontSize: 32, marginBottom: SPACING.sm },
-  warningTitle: { fontSize: 17, fontWeight: '700', color: '#92400e', marginBottom: SPACING.xs, textAlign: 'center' },
-  warningText:  { fontSize: 14, color: '#92400e', textAlign: 'center', lineHeight: 22 },
+  warningIcon:  { fontSize: 32, marginBottom: Spacing.sm },
+  warningTitle: { ...Typography.bodyLarge, color: Colors.warning, marginBottom: Spacing.xs, textAlign: 'center' },
+  warningText:  { ...Typography.small, color: Colors.warning, textAlign: 'center', lineHeight: 22 },
 
   disclaimerBox: {
-    backgroundColor: COLORS.gray[50],
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.base,
+    marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: COLORS.gray[200],
+    borderColor: Colors.gray200,
   },
   disclaimerTitle: {
-    fontSize: 16, fontWeight: '700', color: COLORS.gray[800],
-    textAlign: 'right', marginBottom: SPACING.md,
+    ...Typography.body,
+    fontWeight: '700',
+    color: Colors.text,
+    textAlign: 'right',
+    marginBottom: Spacing.base,
   },
   infoRow: {
     flexDirection: 'row-reverse',
     alignItems: 'flex-start',
-    marginBottom: SPACING.md,
-    gap: SPACING.sm,
+    marginBottom: Spacing.base,
+    gap: Spacing.sm,
   },
   infoIcon:    { fontSize: 20, marginTop: 2 },
   infoContent: { flex: 1 },
-  infoTitle:   { fontSize: 14, fontWeight: '600', color: COLORS.gray[800], textAlign: 'right', marginBottom: 2 },
-  infoBody:    { fontSize: 13, color: COLORS.gray[500], textAlign: 'right', lineHeight: 20 },
+  infoTitle:   { ...Typography.small, fontWeight: '600', color: Colors.text, textAlign: 'right', marginBottom: 2 },
+  infoBody:    { ...Typography.caption, color: Colors.muted, textAlign: 'right', lineHeight: 20 },
 
   checkboxSection: {
-    backgroundColor: COLORS.primary[50],
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: Radius.lg,
+    padding: Spacing.base,
+    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: COLORS.primary[100],
+    borderColor: Colors.primaryMid + '30',
   },
   checkboxTitle: {
-    fontSize: 15, fontWeight: '600', color: COLORS.primary[800],
-    textAlign: 'right', marginBottom: SPACING.sm,
+    ...Typography.bodyMedium,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    textAlign: 'right',
+    marginBottom: Spacing.sm,
   },
   checkboxLabel: {
-    fontSize: 14, color: COLORS.gray[700], textAlign: 'right', lineHeight: 22,
+    ...Typography.small,
+    color: Colors.gray700,
+    textAlign: 'right',
+    lineHeight: 22,
   },
-  checkboxLabelBold: { fontWeight: '700', color: COLORS.gray[800] },
-  link: { color: COLORS.primary[600], textDecorationLine: 'underline' },
+  checkboxLabelBold: { fontWeight: '700', color: Colors.text },
+  link: { color: Colors.primary, textDecorationLine: 'underline' },
   divider: {
-    height: 1, backgroundColor: COLORS.primary[100], marginVertical: SPACING.xs,
+    height: 1, backgroundColor: Colors.primaryMid + '30', marginVertical: Spacing.xs,
   },
 
   checkAllHint: {
-    fontSize: 13, color: COLORS.danger, textAlign: 'center',
-    marginBottom: SPACING.sm,
+    ...Typography.caption,
+    color: Colors.danger,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
   },
-  continueBtn: { marginBottom: SPACING.md },
+  continueBtn: { marginBottom: Spacing.md },
   footerNote: {
-    fontSize: 12, color: COLORS.gray[400], textAlign: 'center', lineHeight: 18,
+    ...Typography.tiny,
+    color: Colors.gray400,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
