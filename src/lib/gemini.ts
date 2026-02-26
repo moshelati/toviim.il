@@ -2,7 +2,7 @@ import { SMALL_CLAIMS_MAX_AMOUNT_NIS } from '../config/legal';
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const GEMINI_MODEL   = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash-lite';
+const GEMINI_MODEL   = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.5-flash-lite';
 const BASE_URL       = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // ─── Types ──────────────────────────────────────────────────────────────────

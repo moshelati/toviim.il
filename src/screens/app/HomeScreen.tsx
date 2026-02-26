@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, ActivityIndicator, RefreshControl,
+  TouchableOpacity, RefreshControl,
+  Animated, Easing, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,6 +44,34 @@ const CLAIM_TYPE_EMOJI: Record<string, string> = {
   other:    '\u2696\uFE0F',
 };
 
+// ─── Carousel items — common small claims scenarios ─────────────
+const CAROUSEL_ITEMS = [
+  { emoji: '\uD83D\uDED2', text: '\u05DE\u05D5\u05E6\u05E8 \u05E4\u05D2\u05D5\u05DD? \u05E7\u05D1\u05DC \u05D4\u05D7\u05D6\u05E8' },
+  { emoji: '\uD83C\uDFE0', text: '\u05E4\u05D9\u05E7\u05D3\u05D5\u05DF \u05E9\u05DC\u05D0 \u05D4\u05D5\u05D7\u05D6\u05E8' },
+  { emoji: '\uD83D\uDD0A', text: '\u05DE\u05D8\u05E8\u05D3\u05D9 \u05E8\u05E2\u05E9 \u05DE\u05E9\u05DB\u05E0\u05D9\u05DD' },
+  { emoji: '\uD83D\uDCBC', text: '\u05E9\u05DB\u05E8 \u05E9\u05DC\u05D0 \u05E9\u05D5\u05DC\u05DD' },
+  { emoji: '\uD83D\uDD27', text: '\u05E7\u05D1\u05DC\u05DF \u05E9\u05DC\u05D0 \u05E1\u05D9\u05D9\u05DD' },
+  { emoji: '\uD83D\uDCB3', text: '\u05D7\u05D9\u05D5\u05D1 \u05DB\u05E4\u05D5\u05DC \u05D1\u05DB\u05E8\u05D8\u05D9\u05E1' },
+  { emoji: '\uD83C\uDFE5', text: '\u05D1\u05D9\u05D8\u05D5\u05D7 \u05E9\u05DE\u05E1\u05E8\u05D1 \u05DC\u05E4\u05E6\u05D5\u05EA' },
+  { emoji: '\uD83D\uDCF1', text: '\u05E9\u05D9\u05E8\u05D5\u05EA \u05DC\u05E7\u05D5\u05D7\u05D5\u05EA \u05D2\u05E8\u05D5\u05E2' },
+  { emoji: '\uD83D\uDE97', text: '\u05E0\u05D6\u05E7 \u05DE\u05EA\u05D0\u05D5\u05E0\u05D4 \u05E7\u05DC\u05D4' },
+  { emoji: '\u2708\uFE0F', text: '\u05D8\u05D9\u05E1\u05D4 \u05E9\u05D1\u05D5\u05D8\u05DC\u05D4' },
+];
+
+const CAROUSEL_CARD_W = 200;
+const CAROUSEL_GAP = 12;
+const SCROLL_DISTANCE = CAROUSEL_ITEMS.length * (CAROUSEL_CARD_W + CAROUSEL_GAP);
+
+// ─── Greeting helper ─────────────────────────────────────────────
+function getGreeting(): { emoji: string; text: string } {
+  const hour = new Date().getHours();
+  if (hour < 6)  return { emoji: '\uD83C\uDF19', text: '\u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1' };
+  if (hour < 12) return { emoji: '\u2600\uFE0F', text: '\u05D1\u05D5\u05E7\u05E8 \u05D8\u05D5\u05D1' };
+  if (hour < 17) return { emoji: '\uD83C\uDF24\uFE0F', text: '\u05E6\u05D4\u05E8\u05D9\u05D9\u05DD \u05D8\u05D5\u05D1\u05D9\u05DD' };
+  if (hour < 21) return { emoji: '\uD83C\uDF05', text: '\u05E2\u05E8\u05D1 \u05D8\u05D5\u05D1' };
+  return { emoji: '\uD83C\uDF19', text: '\u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1' };
+}
+
 export function HomeScreen({ navigation }: Props) {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
@@ -51,7 +80,25 @@ export function HomeScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
+  const greeting = getGreeting();
 
+  // ── Carousel auto-scroll animation ──
+  const carouselAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(carouselAnim, {
+        toValue: -SCROLL_DISTANCE,
+        duration: SCROLL_DISTANCE * 28,
+        useNativeDriver: true,
+        easing: Easing.linear,
+      })
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [carouselAnim]);
+
+  // ── Claims loading ──
   const loadClaims = useCallback(async () => {
     if (!user) return;
     try {
@@ -61,7 +108,6 @@ export function HomeScreen({ navigation }: Props) {
     finally { setLoadingClaims(false); }
   }, [user]);
 
-  // Reload claims every time the tab is focused
   useFocusEffect(
     useCallback(() => {
       loadClaims();
@@ -74,18 +120,7 @@ export function HomeScreen({ navigation }: Props) {
     setRefreshing(false);
   }, [loadClaims]);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return '\uD83C\uDF19 \u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1';
-    if (hour < 12) return '\u2600\uFE0F \u05D1\u05D5\u05E7\u05E8 \u05D8\u05D5\u05D1';
-    if (hour < 17) return '\uD83C\uDF24\uFE0F \u05E6\u05D4\u05E8\u05D9\u05D9\u05DD \u05D8\u05D5\u05D1\u05D9\u05DD';
-    if (hour < 21) return '\uD83C\uDF05 \u05E2\u05E8\u05D1 \u05D8\u05D5\u05D1';
-    return '\uD83C\uDF19 \u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1';
-  };
-
-  // Find the most recent active claim
   const activeClaim = claims.find(c => c.status === 'chat' || c.status === 'evidence' || c.status === 'review');
-  // Show max 3 recent claims as preview
   const recentClaims = claims.slice(0, 3);
 
   return (
@@ -102,18 +137,43 @@ export function HomeScreen({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 120 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />
         }
       >
-        {/* Greeting */}
+        {/* Greeting — right-aligned with separated emoji */}
         <View style={styles.greeting}>
-          <Text style={styles.greetingText}>
-            {firstName ? `${getGreeting()}, ${firstName}` : getGreeting()}
+          <View style={styles.greetingRow}>
+            <Text style={styles.greetingEmoji}>{greeting.emoji}</Text>
+            <Text style={styles.greetingText}>
+              {firstName ? `${greeting.text}, ${firstName}` : greeting.text}
+            </Text>
+          </View>
+          <Text style={styles.greetingSub}>
+            {'\u05D4\u05DB\u05DC\u05D9 \u05D4\u05D7\u05DB\u05DD \u05E9\u05DC\u05DA \u05DC\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA'}
           </Text>
-          <Text style={styles.greetingSub}>{'\u05DE\u05D4 \u05E0\u05E2\u05E9\u05D4 \u05D4\u05D9\u05D5\u05DD?'}</Text>
+        </View>
+
+        {/* Auto-scrolling carousel — common claims */}
+        <Text style={styles.carouselLabel}>
+          {'\u05D0\u05E4\u05E9\u05E8 \u05DC\u05EA\u05D1\u05D5\u05E2 \u05E2\u05DC...'}
+        </Text>
+        <View style={styles.carouselWrap}>
+          <Animated.View
+            style={[
+              styles.carouselTrack,
+              { transform: [{ translateX: carouselAnim }] },
+            ]}
+          >
+            {[...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS].map((item, i) => (
+              <View key={i} style={styles.carouselCard}>
+                <Text style={styles.carouselEmoji}>{item.emoji}</Text>
+                <Text style={styles.carouselText} numberOfLines={1}>{item.text}</Text>
+              </View>
+            ))}
+          </Animated.View>
         </View>
 
         {/* Hero CTA */}
@@ -276,7 +336,7 @@ export function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.surface },
 
-  // Header (simple, no gradient since we have tabs)
+  // Header
   header: {
     backgroundColor: Colors.white,
     paddingHorizontal: SCREEN_PADDING,
@@ -303,12 +363,64 @@ const styles = StyleSheet.create({
   },
 
   scroll: { flex: 1 },
-  scrollContent: { padding: SCREEN_PADDING, paddingBottom: 24 },
+  scrollContent: { padding: SCREEN_PADDING },
 
-  // Greeting
+  // Greeting — emoji separated for proper RTL alignment
   greeting: { marginBottom: SECTION_GAP },
-  greetingText: { ...Typography.h2, color: Colors.text, textAlign: 'right' },
-  greetingSub: { ...Typography.body, color: Colors.muted, textAlign: 'right', marginTop: 4 },
+  greetingRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  greetingEmoji: { fontSize: 28 },
+  greetingText: {
+    ...Typography.h2,
+    color: Colors.text,
+  },
+  greetingSub: {
+    ...Typography.body,
+    color: Colors.muted,
+    textAlign: 'right',
+    marginTop: 4,
+  },
+
+  // Carousel
+  carouselLabel: {
+    ...Typography.bodyLarge,
+    color: Colors.text,
+    textAlign: 'right',
+    marginBottom: Spacing.md,
+  },
+  carouselWrap: {
+    overflow: 'hidden',
+    marginHorizontal: -SCREEN_PADDING,
+    marginBottom: SECTION_GAP,
+    height: 48,
+  },
+  carouselTrack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CAROUSEL_GAP,
+    height: 48,
+    paddingHorizontal: 4,
+  },
+  carouselCard: {
+    width: CAROUSEL_CARD_W,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  carouselEmoji: { fontSize: 18 },
+  carouselText: {
+    ...Typography.small,
+    color: Colors.primaryDark,
+    flex: 1,
+    textAlign: 'right',
+  },
 
   // Hero
   heroCard: {

@@ -58,7 +58,7 @@ export function ProfileScreen({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 120 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile card */}
@@ -107,7 +107,7 @@ export function ProfileScreen({ navigation }: Props) {
           <View style={styles.menuDivider} />
           <View style={styles.aboutRow}>
             <Text style={styles.aboutLabel}>AI</Text>
-            <Text style={styles.aboutValue}>Gemini 2.0 Flash Lite</Text>
+            <Text style={styles.aboutValue}>Gemini 2.5 Flash Lite</Text>
           </View>
         </Card>
 
