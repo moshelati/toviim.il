@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mosheyakir.toviim",
-      "buildNumber": "10",
+      "buildNumber": "12",
       "infoPlist": {
         "NSCameraUsageDescription": "האפליקציה צולמת תמונות כראיות לתביעה שלך",
         "NSPhotoLibraryUsageDescription": "האפליקציה ניגשת לגלריה כדי לצרף תמונות כראיות לתביעה שלך",
