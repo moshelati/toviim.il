@@ -129,8 +129,8 @@ export function HomeScreen({ navigation }: Props) {
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.headerRow}>
           <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>toviim.il</Text>
-            <Text style={styles.headerSub}>{'\u2696\uFE0F \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA \u05D7\u05DB\u05DE\u05D5\u05EA'}</Text>
+            <Text style={styles.headerTitle}>תובעים.il</Text>
+            <Text style={styles.headerSub}>⚖️ עוזר AI לתביעות קטנות</Text>
           </View>
         </View>
       </View>
@@ -152,7 +152,7 @@ export function HomeScreen({ navigation }: Props) {
             </Text>
           </View>
           <Text style={styles.greetingSub}>
-            {'\u05D4\u05DB\u05DC\u05D9 \u05D4\u05D7\u05DB\u05DD \u05E9\u05DC\u05DA \u05DC\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA'}
+            הכלי החכם שלך לתביעות קטנות
           </Text>
         </View>
 

@@ -29,55 +29,57 @@ export function AppHeader({
   const isLight = light ?? gradient;
 
   const content = (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
-      {/* Left: Back button */}
-      <View style={styles.side}>
-        {onBack ? (
-          <TouchableOpacity
-            onPress={onBack}
-            style={styles.iconBtn}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={[styles.backArrow, isLight && styles.lightText]}>→</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.iconBtn} />
-        )}
-      </View>
+    <View style={[styles.outer, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
+        {/* Left: Back button */}
+        <View style={styles.side}>
+          {onBack ? (
+            <TouchableOpacity
+              onPress={onBack}
+              style={styles.iconBtn}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={[styles.backArrow, isLight && styles.lightText]}>→</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.iconBtn} />
+          )}
+        </View>
 
-      {/* Center: Title */}
-      <View style={styles.center}>
-        <Text
-          style={[styles.title, isLight && styles.lightText]}
-          numberOfLines={1}
-        >
-          {title}
-        </Text>
-        {subtitle ? (
+        {/* Center: Title */}
+        <View style={styles.center}>
           <Text
-            style={[styles.subtitle, isLight && styles.lightSubtitle]}
+            style={[styles.title, isLight && styles.lightText]}
             numberOfLines={1}
           >
-            {subtitle}
+            {title}
           </Text>
-        ) : null}
-      </View>
+          {subtitle ? (
+            <Text
+              style={[styles.subtitle, isLight && styles.lightSubtitle]}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
 
-      {/* Right: Action or display-only */}
-      <View style={styles.side}>
-        {rightIcon && onRight ? (
-          <TouchableOpacity
-            onPress={onRight}
-            style={styles.rightBtn}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            {rightIcon}
-          </TouchableOpacity>
-        ) : rightIcon ? (
-          <View style={styles.rightBtn}>{rightIcon}</View>
-        ) : (
-          <View style={styles.iconBtn} />
-        )}
+        {/* Right: Action or display-only */}
+        <View style={styles.side}>
+          {rightIcon && onRight ? (
+            <TouchableOpacity
+              onPress={onRight}
+              style={styles.rightBtn}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              {rightIcon}
+            </TouchableOpacity>
+          ) : rightIcon ? (
+            <View style={styles.rightBtn}>{rightIcon}</View>
+          ) : (
+            <View style={styles.iconBtn} />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -93,7 +95,7 @@ export function AppHeader({
   return <View style={styles.flat}>{content}</View>;
 }
 
-const HEADER_HEIGHT = 56;
+const HEADER_CONTENT_HEIGHT = 52;
 
 const styles = StyleSheet.create({
   gradient: {},
@@ -102,8 +104,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
+  outer: {
+    // paddingTop = insets.top is applied dynamically
+  },
   container: {
-    height: HEADER_HEIGHT,
+    height: HEADER_CONTENT_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.base,

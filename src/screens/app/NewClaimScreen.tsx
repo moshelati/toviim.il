@@ -32,10 +32,10 @@ export function NewClaimScreen({ navigation }: Props) {
 
   function validateStep2() {
     const e: Record<string, string> = {};
-    if (!plaintiffName.trim())  e.name  = '\u05E0\u05D0 \u05DC\u05D4\u05D6\u05D9\u05DF \u05E9\u05DD \u05DE\u05DC\u05D0';
+    if (!plaintiffName.trim())  e.name  = 'נא להזין שם מלא';
     if (plaintiffId.length !== 9 || !/^\d+$/.test(plaintiffId))
-      e.id = '\u05DE\u05E1\u05E4\u05E8 \u05EA.\u05D6. \u05D7\u05D9\u05D9\u05D1 \u05DC\u05D4\u05D9\u05D5\u05EA 9 \u05E1\u05E4\u05E8\u05D5\u05EA';
-    if (plaintiffPhone.length < 9) e.phone = '\u05DE\u05E1\u05E4\u05E8 \u05D8\u05DC\u05E4\u05D5\u05DF \u05DC\u05D0 \u05EA\u05E7\u05D9\u05DF';
+      e.id = 'מספר ת.ז. חייב להיות 9 ספרות';
+    if (plaintiffPhone.length < 9) e.phone = 'מספר טלפון לא תקין';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -70,7 +70,7 @@ export function NewClaimScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" />
 
       <AppHeader
-        title={step === 1 ? '\u05E1\u05D5\u05D2 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4' : '\u05D4\u05E4\u05E8\u05D8\u05D9\u05DD \u05E9\u05DC\u05DA'}
+        title={step === 1 ? 'סוג התביעה' : 'הפרטים שלך'}
         onBack={() => step === 2 ? setStep(1) : navigation.goBack()}
         rightIcon={
           <View style={styles.stepBadge}>
@@ -87,9 +87,9 @@ export function NewClaimScreen({ navigation }: Props) {
         >
           {step === 1 ? (
             <>
-              <Text style={styles.sectionTitle}>{'\u05E2\u05DC \u05DE\u05D4 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4?'}</Text>
+              <Text style={styles.sectionTitle}>על מה התביעה?</Text>
               <Text style={styles.sectionSub}>
-                {'\u05D1\u05D7\u05E8/\u05D9 \u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4 \u2014 \u05D4-AI \u05D9\u05D3\u05E2 \u05DC\u05E9\u05D0\u05D5\u05DC \u05D0\u05EA \u05D4\u05E9\u05D0\u05DC\u05D5\u05EA \u05D4\u05E0\u05DB\u05D5\u05E0\u05D5\u05EA'}
+                בחר/י קטגוריה — ה-AI ידע לשאול את השאלות הנכונות
               </Text>
               <View style={styles.typeGrid}>
                 {CLAIM_CATEGORIES.map(t => (
@@ -112,12 +112,12 @@ export function NewClaimScreen({ navigation }: Props) {
 
               <View style={styles.limitNote}>
                 <Text style={styles.limitNoteText}>
-                  {'\u2139\uFE0F \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA: \u05E2\u05D3 '}{formatNIS(SMALL_CLAIMS_MAX_AMOUNT_NIS)}
+                  {'ℹ️ תביעות קטנות: עד '}{formatNIS(SMALL_CLAIMS_MAX_AMOUNT_NIS)}
                 </Text>
               </View>
 
               <Button
-                label={'\u05D4\u05DE\u05E9\u05DA \u2190'}
+                label={'המשך ←'}
                 onPress={() => { if (selectedType) setStep(2); }}
                 size="lg"
                 disabled={!selectedType}
@@ -126,23 +126,23 @@ export function NewClaimScreen({ navigation }: Props) {
             </>
           ) : (
             <>
-              <Text style={styles.sectionTitle}>{'\u05D4\u05E4\u05E8\u05D8\u05D9\u05DD \u05E9\u05DC\u05DA'}</Text>
+              <Text style={styles.sectionTitle}>הפרטים שלך</Text>
               <Text style={styles.sectionSub}>
-                {'\u05D4\u05E4\u05E8\u05D8\u05D9\u05DD \u05D9\u05D5\u05E4\u05D9\u05E2\u05D5 \u05D1\u05DB\u05EA\u05D1 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D4\u05E8\u05E9\u05DE\u05D9'}
+                הפרטים יופיעו בכתב התביעה הרשמי
               </Text>
 
               <View style={styles.formCard}>
                 <Input
-                  label={'\u05E9\u05DD \u05DE\u05DC\u05D0 (\u05DB\u05E4\u05D9 \u05E9\u05DE\u05D5\u05E4\u05D9\u05E2 \u05D1\u05EA.\u05D6.)'}
-                  placeholder={'\u05D9\u05E9\u05E8\u05D0\u05DC \u05D9\u05E9\u05E8\u05D0\u05DC\u05D9'}
+                  label="שם מלא (כפי שמופיע בת.ז.)"
+                  placeholder="ישראל ישראלי"
                   value={plaintiffName}
                   onChangeText={setPlaintiffName}
                   error={errors.name}
                   autoComplete="name"
                 />
                 <Input
-                  label={'\u05DE\u05E1\u05E4\u05E8 \u05EA\u05E2\u05D5\u05D3\u05EA \u05D6\u05D4\u05D5\u05EA'}
-                  placeholder="9 \u05E1\u05E4\u05E8\u05D5\u05EA"
+                  label="מספר תעודת זהות"
+                  placeholder="9 ספרות"
                   value={plaintiffId}
                   onChangeText={setPlaintiffId}
                   error={errors.id}
@@ -150,7 +150,7 @@ export function NewClaimScreen({ navigation }: Props) {
                   maxLength={9}
                 />
                 <Input
-                  label={'\u05DE\u05E1\u05E4\u05E8 \u05D8\u05DC\u05E4\u05D5\u05DF'}
+                  label="מספר טלפון"
                   placeholder="05X-XXXXXXX"
                   value={plaintiffPhone}
                   onChangeText={setPlaintiffPhone}
@@ -160,14 +160,14 @@ export function NewClaimScreen({ navigation }: Props) {
               </View>
 
               <View style={styles.aiNote}>
-                <Text style={styles.aiNoteIcon}>{'\uD83E\uDD16'}</Text>
+                <Text style={styles.aiNoteIcon}>🤖</Text>
                 <Text style={styles.aiNoteText}>
-                  {'\u05DC\u05D0\u05D7\u05E8 \u05D4\u05E9\u05DC\u05DE\u05EA \u05D4\u05E4\u05E8\u05D8\u05D9\u05DD, \u05D4-AI \u05D9\u05E8\u05D0\u05D9\u05D9\u05DF \u05D0\u05D5\u05EA\u05DA \u05D1\u05E2\u05D1\u05E8\u05D9\u05EA \u05D5\u05D9\u05D1\u05E0\u05D4 \u05D0\u05EA \u05D4\u05EA\u05D9\u05E7 \u05E9\u05DC\u05DA \u05E9\u05D0\u05DC\u05D4 \u05D0\u05D7\u05E8 \u05E9\u05D0\u05DC\u05D4.'}
+                  לאחר השלמת הפרטים, ה-AI יראיין אותך בעברית ויבנה את התיק שלך שאלה אחר שאלה.
                 </Text>
               </View>
 
               <Button
-                label={'\uD83D\uDE80 \u05D4\u05EA\u05D7\u05DC \u05E8\u05D0\u05D9\u05D5\u05DF AI'}
+                label="🚀 התחל ראיון AI"
                 onPress={handleStart}
                 size="lg"
                 loading={loading}
@@ -181,12 +181,12 @@ export function NewClaimScreen({ navigation }: Props) {
       <BottomSheet
         visible={errorSheet}
         onClose={() => setErrorSheet(false)}
-        icon={'\u274C'}
-        title={'\u05E9\u05D2\u05D9\u05D0\u05D4'}
-        body={'\u05DC\u05D0 \u05E0\u05D9\u05EA\u05DF \u05DC\u05E4\u05EA\u05D5\u05D7 \u05EA\u05D1\u05D9\u05E2\u05D4 \u05DB\u05E8\u05D2\u05E2. \u05E0\u05E1\u05D4 \u05E9\u05D5\u05D1.'}
-        primaryLabel={'\u05E0\u05E1\u05D4 \u05E9\u05D5\u05D1'}
+        icon="❌"
+        title="שגיאה"
+        body="לא ניתן לפתוח תביעה כרגע. נסה שוב."
+        primaryLabel="נסה שוב"
         onPrimary={() => { setErrorSheet(false); handleStart(); }}
-        secondaryLabel={'\u05D1\u05D9\u05D8\u05D5\u05DC'}
+        secondaryLabel="ביטול"
         onSecondary={() => setErrorSheet(false)}
       />
     </View>
