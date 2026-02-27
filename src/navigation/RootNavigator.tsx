@@ -43,10 +43,10 @@ import type { AuthStackParamList, AppStackParamList, TabParamList } from '../typ
 export const FLOATING_TAB_BAR_HEIGHT = 90;
 
 const TAB_CONFIG: { emoji: string; label: string }[] = [
-  { emoji: '\uD83C\uDFE0', label: '\u05D1\u05D9\u05EA' },
-  { emoji: '\uD83D\uDCCB', label: '\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA' },
-  { emoji: '\uD83D\uDCD6', label: '\u05DE\u05D3\u05E8\u05D9\u05DA' },
-  { emoji: '\uD83D\uDC64', label: '\u05D7\u05E9\u05D1\u05D5\u05DF' },
+  { emoji: '🏠', label: 'בית' },
+  { emoji: '📋', label: 'תביעות' },
+  { emoji: '📖', label: 'מדריך' },
+  { emoji: '👤', label: 'חשבון' },
 ];
 
 // ─── Navigators ────────────────────────────────────────────────
@@ -245,12 +245,16 @@ const floatingStyles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.6)',
     marginHorizontal: Spacing.xl,
+    // Solid fallback so tab bar is always visible even if BlurView fails
+    backgroundColor: Platform.OS === 'ios'
+      ? 'rgba(255,255,255,0.85)'
+      : 'rgba(255,255,255,0.95)',
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Platform.OS === 'ios'
-      ? 'rgba(255,255,255,0.25)'
-      : 'rgba(255,255,255,0.88)',
+      ? 'rgba(255,255,255,0.35)'
+      : 'rgba(255,255,255,0.92)',
   },
   inner: {
     flexDirection: 'row',

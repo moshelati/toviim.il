@@ -27,49 +27,50 @@ type Props = CompositeScreenProps<
 >;
 
 const CLAIM_TYPE_HE: Record<string, string> = {
-  consumer: '\u05E6\u05E8\u05DB\u05E0\u05D5\u05EA',
-  landlord: '\u05E9\u05DB\u05D9\u05E8\u05D5\u05EA',
-  employer: '\u05E2\u05D1\u05D5\u05D3\u05D4',
-  neighbor: '\u05E9\u05DB\u05E0\u05D9\u05DD',
-  contract: '\u05D7\u05D5\u05D6\u05D4',
-  other:    '\u05D0\u05D7\u05E8',
+  consumer: 'צרכנות',
+  landlord: 'שכירות',
+  employer: 'עבודה',
+  neighbor: 'שכנים',
+  contract: 'חוזה',
+  other:    'אחר',
 };
 
 const CLAIM_TYPE_EMOJI: Record<string, string> = {
-  consumer: '\uD83D\uDED2',
-  landlord: '\uD83C\uDFE0',
-  employer: '\uD83D\uDCBC',
-  neighbor: '\uD83C\uDFD8\uFE0F',
-  contract: '\uD83D\uDCDD',
-  other:    '\u2696\uFE0F',
+  consumer: '🛒',
+  landlord: '🏠',
+  employer: '💼',
+  neighbor: '🏘️',
+  contract: '📝',
+  other:    '⚖️',
 };
 
 // ─── Carousel items — common small claims scenarios ─────────────
 const CAROUSEL_ITEMS = [
-  { emoji: '\uD83D\uDED2', text: '\u05DE\u05D5\u05E6\u05E8 \u05E4\u05D2\u05D5\u05DD? \u05E7\u05D1\u05DC \u05D4\u05D7\u05D6\u05E8' },
-  { emoji: '\uD83C\uDFE0', text: '\u05E4\u05D9\u05E7\u05D3\u05D5\u05DF \u05E9\u05DC\u05D0 \u05D4\u05D5\u05D7\u05D6\u05E8' },
-  { emoji: '\uD83D\uDD0A', text: '\u05DE\u05D8\u05E8\u05D3\u05D9 \u05E8\u05E2\u05E9 \u05DE\u05E9\u05DB\u05E0\u05D9\u05DD' },
-  { emoji: '\uD83D\uDCBC', text: '\u05E9\u05DB\u05E8 \u05E9\u05DC\u05D0 \u05E9\u05D5\u05DC\u05DD' },
-  { emoji: '\uD83D\uDD27', text: '\u05E7\u05D1\u05DC\u05DF \u05E9\u05DC\u05D0 \u05E1\u05D9\u05D9\u05DD' },
-  { emoji: '\uD83D\uDCB3', text: '\u05D7\u05D9\u05D5\u05D1 \u05DB\u05E4\u05D5\u05DC \u05D1\u05DB\u05E8\u05D8\u05D9\u05E1' },
-  { emoji: '\uD83C\uDFE5', text: '\u05D1\u05D9\u05D8\u05D5\u05D7 \u05E9\u05DE\u05E1\u05E8\u05D1 \u05DC\u05E4\u05E6\u05D5\u05EA' },
-  { emoji: '\uD83D\uDCF1', text: '\u05E9\u05D9\u05E8\u05D5\u05EA \u05DC\u05E7\u05D5\u05D7\u05D5\u05EA \u05D2\u05E8\u05D5\u05E2' },
-  { emoji: '\uD83D\uDE97', text: '\u05E0\u05D6\u05E7 \u05DE\u05EA\u05D0\u05D5\u05E0\u05D4 \u05E7\u05DC\u05D4' },
-  { emoji: '\u2708\uFE0F', text: '\u05D8\u05D9\u05E1\u05D4 \u05E9\u05D1\u05D5\u05D8\u05DC\u05D4' },
+  { emoji: '🛒', text: 'מוצר פגום? קבל החזר' },
+  { emoji: '🏠', text: 'פיקדון שלא הוחזר' },
+  { emoji: '🔊', text: 'מטרדי רעש משכנים' },
+  { emoji: '💼', text: 'שכר שלא שולם' },
+  { emoji: '🔧', text: 'קבלן שלא סיים' },
+  { emoji: '💳', text: 'חיוב כפול בכרטיס' },
+  { emoji: '🏥', text: 'ביטוח שמסרב לפצות' },
+  { emoji: '📱', text: 'שירות לקוחות גרוע' },
+  { emoji: '🚗', text: 'נזק מתאונה קלה' },
+  { emoji: '✈️', text: 'טיסה שבוטלה' },
 ];
 
 const CAROUSEL_CARD_W = 200;
 const CAROUSEL_GAP = 12;
-const SCROLL_DISTANCE = CAROUSEL_ITEMS.length * (CAROUSEL_CARD_W + CAROUSEL_GAP);
+/** Distance for one full set of items — we triple items for seamless loop */
+const ONE_SET_WIDTH = CAROUSEL_ITEMS.length * (CAROUSEL_CARD_W + CAROUSEL_GAP);
 
 // ─── Greeting helper ─────────────────────────────────────────────
 function getGreeting(): { emoji: string; text: string } {
   const hour = new Date().getHours();
-  if (hour < 6)  return { emoji: '\uD83C\uDF19', text: '\u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1' };
-  if (hour < 12) return { emoji: '\u2600\uFE0F', text: '\u05D1\u05D5\u05E7\u05E8 \u05D8\u05D5\u05D1' };
-  if (hour < 17) return { emoji: '\uD83C\uDF24\uFE0F', text: '\u05E6\u05D4\u05E8\u05D9\u05D9\u05DD \u05D8\u05D5\u05D1\u05D9\u05DD' };
-  if (hour < 21) return { emoji: '\uD83C\uDF05', text: '\u05E2\u05E8\u05D1 \u05D8\u05D5\u05D1' };
-  return { emoji: '\uD83C\uDF19', text: '\u05DC\u05D9\u05DC\u05D4 \u05D8\u05D5\u05D1' };
+  if (hour < 6)  return { emoji: '🌙', text: 'לילה טוב' };
+  if (hour < 12) return { emoji: '☀️', text: 'בוקר טוב' };
+  if (hour < 17) return { emoji: '🌤️', text: 'צהריים טובים' };
+  if (hour < 21) return { emoji: '🌅', text: 'ערב טוב' };
+  return { emoji: '🌙', text: 'לילה טוב' };
 }
 
 export function HomeScreen({ navigation }: Props) {
@@ -88,8 +89,8 @@ export function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     const anim = Animated.loop(
       Animated.timing(carouselAnim, {
-        toValue: -SCROLL_DISTANCE,
-        duration: SCROLL_DISTANCE * 28,
+        toValue: -ONE_SET_WIDTH,
+        duration: ONE_SET_WIDTH * 28,
         useNativeDriver: true,
         easing: Easing.linear,
       })
@@ -158,7 +159,7 @@ export function HomeScreen({ navigation }: Props) {
 
         {/* Auto-scrolling carousel — common claims */}
         <Text style={styles.carouselLabel}>
-          {'\u05D0\u05E4\u05E9\u05E8 \u05DC\u05EA\u05D1\u05D5\u05E2 \u05E2\u05DC...'}
+          אפשר לתבוע על...
         </Text>
         <View style={styles.carouselWrap}>
           <Animated.View
@@ -167,7 +168,7 @@ export function HomeScreen({ navigation }: Props) {
               { transform: [{ translateX: carouselAnim }] },
             ]}
           >
-            {[...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS].map((item, i) => (
+            {[...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS].map((item, i) => (
               <View key={i} style={styles.carouselCard}>
                 <Text style={styles.carouselEmoji}>{item.emoji}</Text>
                 <Text style={styles.carouselText} numberOfLines={1}>{item.text}</Text>
@@ -188,14 +189,14 @@ export function HomeScreen({ navigation }: Props) {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.heroIconWrap}>
-              <Text style={styles.heroIcon}>{'\u2696'}</Text>
+              <Text style={styles.heroIcon}>⚖</Text>
             </View>
-            <Text style={styles.heroTitle}>{'\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D7\u05D3\u05E9\u05D4'}</Text>
+            <Text style={styles.heroTitle}>תביעה חדשה</Text>
             <Text style={styles.heroSub}>
-              {'\u05EA\u05D5\u05DA 15 \u05D3\u05E7\u05D5\u05EA \u05EA\u05E6\u05D0/\u05D9 \u05E2\u05DD PDF + \u05E0\u05E1\u05E4\u05D7\u05D9\u05DD'}
+              תוך 15 דקות תצא/י עם PDF + נספחים
             </Text>
             <View style={styles.heroBtnWrap}>
-              <Text style={styles.heroBtnText}>{'\u05D4\u05EA\u05D7\u05DC \u05E2\u05DB\u05E9\u05D9\u05D5'}</Text>
+              <Text style={styles.heroBtnText}>התחל עכשיו</Text>
             </View>
           </LinearGradient>
         </TouchableOpacity>
@@ -214,13 +215,13 @@ export function HomeScreen({ navigation }: Props) {
           >
             <View style={styles.continueRow}>
               <View style={styles.continueInfo}>
-                <Text style={styles.continueLabel}>{'\u05D4\u05DE\u05E9\u05DA \u05D0\u05EA \u05D4\u05EA\u05D9\u05E7'}</Text>
+                <Text style={styles.continueLabel}>המשך את התיק</Text>
                 <Text style={styles.continueTitle}>
-                  {CLAIM_TYPE_EMOJI[activeClaim.claimType ?? ''] ?? '\u2696\uFE0F'}{' '}
-                  {CLAIM_TYPE_HE[activeClaim.claimType ?? ''] ?? '\u05EA\u05D1\u05D9\u05E2\u05D4'}
+                  {CLAIM_TYPE_EMOJI[activeClaim.claimType ?? ''] ?? '⚖️'}{' '}
+                  {CLAIM_TYPE_HE[activeClaim.claimType ?? ''] ?? 'תביעה'}
                 </Text>
                 <Badge
-                  label={activeClaim.status === 'chat' ? '\u05D1\u05E8\u05D0\u05D9\u05D5\u05DF' : '\u05D1\u05E2\u05E8\u05D9\u05DB\u05D4'}
+                  label={activeClaim.status === 'chat' ? 'בראיון' : 'בעריכה'}
                   variant={activeClaim.status === 'chat' ? 'warning' : 'primary'}
                   style={{ marginTop: 6 }}
                 />
@@ -240,24 +241,24 @@ export function HomeScreen({ navigation }: Props) {
         ) : recentClaims.length > 0 ? (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{'\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05D0\u05D7\u05E8\u05D5\u05E0\u05D5\u05EA'}</Text>
+              <Text style={styles.sectionTitle}>תביעות אחרונות</Text>
               {claims.length > 3 && (
                 <TouchableOpacity onPress={() => navigation.navigate('ClaimsTab' as any)}>
-                  <Text style={styles.seeAllLink}>{'\u05E8\u05D0\u05D4 \u05D4\u05DB\u05DC'} ({claims.length})</Text>
+                  <Text style={styles.seeAllLink}>ראה הכל ({claims.length})</Text>
                 </TouchableOpacity>
               )}
             </View>
             {recentClaims.map(c => {
               const score = c.readinessScore ?? 0;
               const scoreColor = getScoreColor(score);
-              const typeLabel = CLAIM_TYPE_HE[c.claimType ?? ''] ?? '\u05EA\u05D1\u05D9\u05E2\u05D4';
-              const typeEmoji = CLAIM_TYPE_EMOJI[c.claimType ?? ''] ?? '\u2696\uFE0F';
+              const typeLabel = CLAIM_TYPE_HE[c.claimType ?? ''] ?? 'תביעה';
+              const typeEmoji = CLAIM_TYPE_EMOJI[c.claimType ?? ''] ?? '⚖️';
               const statusLabel =
-                c.status === 'chat' ? '\u05D1\u05E8\u05D0\u05D9\u05D5\u05DF' :
-                c.status === 'review' ? '\u05D1\u05E2\u05E8\u05D9\u05DB\u05D4' :
-                c.status === 'draft' ? '\u05D8\u05D9\u05D5\u05D8\u05D4' :
-                c.status === 'ready' ? '\u05DE\u05D5\u05DB\u05DF' :
-                c.status === 'exported' ? '\u05D9\u05D5\u05E6\u05D0' : '\u05E4\u05EA\u05D5\u05D7';
+                c.status === 'chat' ? 'בראיון' :
+                c.status === 'review' ? 'בעריכה' :
+                c.status === 'draft' ? 'טיוטה' :
+                c.status === 'ready' ? 'מוכן' :
+                c.status === 'exported' ? 'יוצא' : 'פתוח';
 
               return (
                 <Card
@@ -279,7 +280,7 @@ export function HomeScreen({ navigation }: Props) {
                       <Text style={styles.claimTitle}>{typeLabel}</Text>
                       <Text style={styles.claimSub} numberOfLines={1}>
                         {c.plaintiffName ?? c.plaintiff?.fullName ?? ''}
-                        {c.defendant || c.defendants?.[0]?.name ? ` \u05E0\u05D2\u05D3 ${c.defendant || c.defendants?.[0]?.name}` : ''}
+                        {c.defendant || c.defendants?.[0]?.name ? ` נגד ${c.defendant || c.defendants?.[0]?.name}` : ''}
                       </Text>
                     </View>
                     <View style={styles.claimRight}>
@@ -294,13 +295,13 @@ export function HomeScreen({ navigation }: Props) {
         ) : null}
 
         {/* Feature tiles */}
-        <Text style={styles.sectionTitle}>{'\u05D4\u05DB\u05DC\u05D9\u05DD \u05E9\u05DC\u05DA'}</Text>
+        <Text style={styles.sectionTitle}>הכלים שלך</Text>
         <View style={styles.tileGrid}>
           {[
-            { emoji: '\uD83E\uDD16', title: '\u05E8\u05D0\u05D9\u05D5\u05DF AI', sub: '\u05E9\u05D0\u05DC\u05D5\u05EA \u05DE\u05E0\u05D7\u05D5\u05EA \u05DC\u05D1\u05E0\u05D9\u05D9\u05EA \u05D4\u05EA\u05D9\u05E7', onPress: () => navigation.navigate('NewClaim') },
-            { emoji: '\uD83D\uDCC4', title: '\u05DB\u05EA\u05D1 \u05EA\u05D1\u05D9\u05E2\u05D4', sub: 'PDF \u05DE\u05D5\u05DB\u05DF \u05DC\u05D8\u05D5\u05E4\u05E1 1', onPress: () => navigation.navigate('NewClaim') },
-            { emoji: '\u2696\uFE0F', title: '\u05DE\u05D5\u05E7-\u05D8\u05E8\u05D9\u05D0\u05DC', sub: '\u05EA\u05E8\u05D2\u05D5\u05DC \u05E2\u05DD \u05E9\u05D5\u05E4\u05D8 AI', onPress: () => navigation.navigate('NewClaim') },
-            { emoji: '\uD83D\uDCD6', title: '\u05DE\u05D3\u05E8\u05D9\u05DA', sub: '\u05D0\u05D9\u05DA \u05DE\u05D2\u05D9\u05E9\u05D9\u05DD \u05EA\u05D1\u05D9\u05E2\u05D4', onPress: () => navigation.navigate('GuideTab' as any) },
+            { emoji: '🤖', title: 'ראיון AI', sub: 'שאלות מנחות לבניית התיק', onPress: () => navigation.navigate('NewClaim') },
+            { emoji: '📄', title: 'כתב תביעה', sub: 'PDF מוכן לטופס 1', onPress: () => navigation.navigate('NewClaim') },
+            { emoji: '⚖️', title: 'מוק-טריאל', sub: 'תרגול עם שופט AI', onPress: () => navigation.navigate('NewClaim') },
+            { emoji: '📖', title: 'מדריך', sub: 'איך מגישים תביעה', onPress: () => navigation.navigate('GuideTab' as any) },
           ].map((item, i) => (
             <TouchableOpacity
               key={i}
@@ -320,13 +321,13 @@ export function HomeScreen({ navigation }: Props) {
         {/* Info banner */}
         <View style={styles.infoBanner}>
           <Text style={styles.infoBannerText}>
-            {'\u2139'} {'\u05D2\u05D1\u05D5\u05DC \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA: \u05E2\u05D3'} <Text style={{ fontWeight: '700' }}>{formatNIS(SMALL_CLAIMS_MAX_AMOUNT_NIS)}</Text>
+            ℹ גבול תביעות קטנות: עד <Text style={{ fontWeight: '700' }}>{formatNIS(SMALL_CLAIMS_MAX_AMOUNT_NIS)}</Text>
           </Text>
         </View>
 
         {/* Disclaimer */}
         <Text style={styles.disclaimer}>
-          {'\uD83E\uDD16 \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1-AI \u05D5\u05D0\u05D9\u05E0\u05D4 \u05DE\u05D7\u05DC\u05D9\u05E4\u05D4 \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9'}
+          🤖 האפליקציה משתמשת ב-AI ואינה מחליפה ייעוץ משפטי מקצועי
         </Text>
       </ScrollView>
     </View>

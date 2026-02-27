@@ -12,7 +12,7 @@ export const GEMINI_API_KEY =
 
 /** Gemini model name */
 export const GEMINI_MODEL =
-  process.env.EXPO_PUBLIC_GEMINI_MODEL ?? 'gemini-2.5-flash-lite';
+  process.env.EXPO_PUBLIC_GEMINI_MODEL ?? 'gemini-2.0-flash';
 
 /** Base URL for Gemini API */
 export const GEMINI_BASE_URL =
