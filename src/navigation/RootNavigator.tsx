@@ -26,11 +26,22 @@ import { GuideScreen }      from '../screens/app/GuideScreen';
 import { ProfileScreen }    from '../screens/app/ProfileScreen';
 
 // Pushed screens (on top of tabs)
-import { NewClaimScreen }    from '../screens/app/NewClaimScreen';
-import { ClaimChatScreen }   from '../screens/app/ClaimChatScreen';
-import { ClaimDetailScreen } from '../screens/app/ClaimDetailScreen';
-import { MockTrialScreen }   from '../screens/app/MockTrialScreen';
-import { ConfidenceScreen }  from '../screens/app/ConfidenceScreen';
+import { NewClaimScreen }        from '../screens/app/NewClaimScreen';
+import { ClaimChatScreen }       from '../screens/app/ClaimChatScreen';
+import { ClaimDetailScreen }     from '../screens/app/ClaimDetailScreen';
+import { MockTrialScreen }       from '../screens/app/MockTrialScreen';
+import { ConfidenceScreen }      from '../screens/app/ConfidenceScreen';
+
+// New platform screens
+import { ClaimHubScreen }        from '../screens/app/ClaimHubScreen';
+import { EligibilityScreen }     from '../screens/app/EligibilityScreen';
+import { PlaintiffFormScreen }   from '../screens/app/PlaintiffFormScreen';
+import { DefendantFormScreen }   from '../screens/app/DefendantFormScreen';
+import { TimelineFormScreen }    from '../screens/app/TimelineFormScreen';
+import { DemandFormScreen }      from '../screens/app/DemandFormScreen';
+import { EvidenceLinkingScreen } from '../screens/app/EvidenceLinkingScreen';
+import { PreflightScreen }      from '../screens/app/PreflightScreen';
+import { WarningLetterScreen }   from '../screens/app/WarningLetterScreen';
 
 // Legal screens
 import { TermsScreen }   from '../screens/legal/TermsScreen';
@@ -181,10 +192,19 @@ function AppNavigator() {
       <AppStack.Screen name="NewClaim"    component={NewClaimScreen}    />
       <AppStack.Screen name="ClaimChat"   component={ClaimChatScreen}   />
       <AppStack.Screen name="ClaimDetail" component={ClaimDetailScreen} />
-      <AppStack.Screen name="MockTrial"   component={MockTrialScreen}   />
-      <AppStack.Screen name="Confidence"  component={ConfidenceScreen}  />
-      <AppStack.Screen name="Terms"       component={TermsScreen}       />
-      <AppStack.Screen name="Privacy"     component={PrivacyScreen}     />
+      <AppStack.Screen name="MockTrial"       component={MockTrialScreen}       />
+      <AppStack.Screen name="Confidence"      component={ConfidenceScreen}      />
+      <AppStack.Screen name="ClaimHub"        component={ClaimHubScreen}        />
+      <AppStack.Screen name="Eligibility"     component={EligibilityScreen}     />
+      <AppStack.Screen name="PlaintiffForm"   component={PlaintiffFormScreen}   />
+      <AppStack.Screen name="DefendantForm"   component={DefendantFormScreen}   />
+      <AppStack.Screen name="TimelineForm"    component={TimelineFormScreen}    />
+      <AppStack.Screen name="DemandForm"      component={DemandFormScreen}      />
+      <AppStack.Screen name="EvidenceLinking" component={EvidenceLinkingScreen} />
+      <AppStack.Screen name="Preflight"       component={PreflightScreen}       />
+      <AppStack.Screen name="WarningLetter"   component={WarningLetterScreen}   />
+      <AppStack.Screen name="Terms"           component={TermsScreen}           />
+      <AppStack.Screen name="Privacy"         component={PrivacyScreen}         />
     </AppStack.Navigator>
   );
 }

@@ -29,31 +29,31 @@ type Props = CompositeScreenProps<
 >;
 
 const CLAIM_TYPE_HE: Record<string, string> = {
-  consumer: '\u05E6\u05E8\u05DB\u05E0\u05D5\u05EA',
-  landlord: '\u05E9\u05DB\u05D9\u05E8\u05D5\u05EA',
-  employer: '\u05E2\u05D1\u05D5\u05D3\u05D4',
-  neighbor: '\u05E9\u05DB\u05E0\u05D9\u05DD',
-  contract: '\u05D7\u05D5\u05D6\u05D4',
-  other:    '\u05D0\u05D7\u05E8',
+  consumer: 'צרכנות',
+  landlord: 'שכירות',
+  employer: 'עבודה',
+  neighbor: 'שכנים',
+  contract: 'חוזה',
+  other:    'אחר',
 };
 
 const CLAIM_TYPE_EMOJI: Record<string, string> = {
-  consumer: '\uD83D\uDED2',
-  landlord: '\uD83C\uDFE0',
-  employer: '\uD83D\uDCBC',
-  neighbor: '\uD83C\uDFD8\uFE0F',
-  contract: '\uD83D\uDCDD',
-  other:    '\u2696\uFE0F',
+  consumer: '🛒',
+  landlord: '🏠',
+  employer: '💼',
+  neighbor: '🏘️',
+  contract: '📝',
+  other:    '⚖️',
 };
 
 const STATUS_HE: Record<string, string> = {
-  chat:     '\u05D1\u05E8\u05D0\u05D9\u05D5\u05DF',
-  review:   '\u05D1\u05E2\u05E8\u05D9\u05DB\u05D4',
-  evidence: '\u05E8\u05D0\u05D9\u05D5\u05EA',
-  draft:    '\u05D8\u05D9\u05D5\u05D8\u05D4',
-  ready:    '\u05DE\u05D5\u05DB\u05DF',
-  exported: '\u05D9\u05D5\u05E6\u05D0',
-  complete: '\u05D4\u05D5\u05E9\u05DC\u05DD',
+  chat:     'בראיון',
+  review:   'בעריכה',
+  evidence: 'ראיות',
+  draft:    'טיוטה',
+  ready:    'מוכן',
+  exported: 'יוצא',
+  complete: 'הושלם',
 };
 
 function getStatusVariant(status: string): 'primary' | 'success' | 'warning' | 'danger' | 'muted' {
@@ -117,32 +117,29 @@ export function ClaimsScreen({ navigation }: Props) {
   const doneCount = claims.filter(c => ['ready', 'exported', 'complete'].includes(c.status)).length;
 
   const navigateToClaim = (c: Claim) => {
-    if (c.status === 'chat') {
-      navigation.navigate('ClaimChat', { claimId: c.id, claimType: c.claimType ?? '' });
-    } else {
-      navigation.navigate('ClaimDetail', { claimId: c.id });
-    }
+    // Navigate to ClaimHub for all claims — it's the central dashboard
+    navigation.navigate('ClaimHub', { claimId: c.id });
   };
 
   return (
     <View style={styles.screen}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <Text style={styles.headerTitle}>{'\u05D4\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E9\u05DC\u05DA'}</Text>
+        <Text style={styles.headerTitle}>התביעות שלך</Text>
         <Text style={styles.headerSub}>
           {claims.length > 0
-            ? `${claims.length} \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E1\u05D4\u05F4\u05DB`
-            : '\u05E2\u05D3\u05D9\u05D9\u05DF \u05D0\u05D9\u05DF \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA'}
+            ? `${claims.length} תביעות סה״כ`
+            : 'עדיין אין תביעות'}
         </Text>
       </View>
 
       {/* Search + filters */}
       <View style={styles.searchWrap}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>{'\uD83D\uDD0D'}</Text>
+          <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder={'\u05D7\u05D9\u05E4\u05D5\u05E9 \u05EA\u05D1\u05D9\u05E2\u05D4...'}
+            placeholder="חיפוש תביעה..."
             placeholderTextColor={Colors.gray400}
             value={search}
             onChangeText={setSearch}
@@ -151,9 +148,9 @@ export function ClaimsScreen({ navigation }: Props) {
         </View>
         <View style={styles.filterRow}>
           {([
-            { key: 'all', label: `\u05D4\u05DB\u05DC (${claims.length})` },
-            { key: 'active', label: `\u05E4\u05E2\u05D9\u05DC\u05D5\u05EA (${activeCount})` },
-            { key: 'done', label: `\u05D4\u05D5\u05E9\u05DC\u05DE\u05D5 (${doneCount})` },
+            { key: 'all', label: `הכל (${claims.length})` },
+            { key: 'active', label: `פעילות (${activeCount})` },
+            { key: 'done', label: `הושלמו (${doneCount})` },
           ] as const).map(f => (
             <TouchableOpacity
               key={f.key}
@@ -173,14 +170,14 @@ export function ClaimsScreen({ navigation }: Props) {
         <ClaimsListSkeleton />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={search ? '\uD83D\uDD0D' : '\uD83D\uDCCB'}
-          title={search ? '\u05DC\u05D0 \u05E0\u05DE\u05E6\u05D0\u05D5 \u05EA\u05D5\u05E6\u05D0\u05D5\u05EA' : '\u05D0\u05D9\u05DF \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E2\u05D3\u05D9\u05D9\u05DF'}
+          icon={search ? '🔍' : '📋'}
+          title={search ? 'לא נמצאו תוצאות' : 'אין תביעות עדיין'}
           subtitle={
             search
-              ? '\u05E0\u05E1\u05D4 \u05DC\u05E9\u05E0\u05D5\u05EA \u05D0\u05EA \u05DE\u05D9\u05DC\u05D5\u05EA \u05D4\u05D7\u05D9\u05E4\u05D5\u05E9'
-              : '\u05D4\u05EA\u05D7\u05DC \u05EA\u05D1\u05D9\u05E2\u05D4 \u05D7\u05D3\u05E9\u05D4 \u05D5\u05D4\u05D9\u05D0 \u05EA\u05D5\u05E4\u05D9\u05E2 \u05DB\u05D0\u05DF'
+              ? 'נסה לשנות את מילות החיפוש'
+              : 'התחל תביעה חדשה והיא תופיע כאן'
           }
-          actionLabel={search ? undefined : '\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D7\u05D3\u05E9\u05D4'}
+          actionLabel={search ? undefined : 'תביעה חדשה'}
           onAction={search ? undefined : () => navigation.navigate('NewClaim')}
         />
       ) : (
@@ -195,9 +192,9 @@ export function ClaimsScreen({ navigation }: Props) {
           {filtered.map(c => {
             const score = c.readinessScore ?? 0;
             const scoreColor = getScoreColor(score);
-            const typeLabel = CLAIM_TYPE_HE[c.claimType ?? ''] ?? '\u05EA\u05D1\u05D9\u05E2\u05D4';
-            const typeEmoji = CLAIM_TYPE_EMOJI[c.claimType ?? ''] ?? '\u2696\uFE0F';
-            const statusLabel = STATUS_HE[c.status] ?? '\u05E4\u05EA\u05D5\u05D7';
+            const typeLabel = CLAIM_TYPE_HE[c.claimType ?? ''] ?? 'תביעה';
+            const typeEmoji = CLAIM_TYPE_EMOJI[c.claimType ?? ''] ?? '⚖️';
+            const statusLabel = STATUS_HE[c.status] ?? 'פתוח';
 
             return (
               <Card key={c.id} onPress={() => navigateToClaim(c)} style={styles.claimCard}>
@@ -210,7 +207,7 @@ export function ClaimsScreen({ navigation }: Props) {
                     <Text style={styles.claimSub} numberOfLines={1}>
                       {c.plaintiffName ?? c.plaintiff?.fullName ?? ''}
                       {c.defendant || c.defendants?.[0]?.name
-                        ? ` \u05E0\u05D2\u05D3 ${c.defendant || c.defendants?.[0]?.name}`
+                        ? ` נגד ${c.defendant || c.defendants?.[0]?.name}`
                         : ''}
                     </Text>
                     <Badge
@@ -227,9 +224,9 @@ export function ClaimsScreen({ navigation }: Props) {
                 {/* Amount row */}
                 {(c.amountClaimedNis || c.amount) ? (
                   <View style={styles.amountRow}>
-                    <Text style={styles.amountLabel}>{'\u05E1\u05DB\u05D5\u05DD \u05EA\u05D1\u05D9\u05E2\u05D4:'}</Text>
+                    <Text style={styles.amountLabel}>סכום תביעה:</Text>
                     <Text style={styles.amountValue}>
-                      {'\u20AA'}{(c.amountClaimedNis ?? c.amount ?? 0).toLocaleString()}
+                      ₪{(c.amountClaimedNis ?? c.amount ?? 0).toLocaleString()}
                     </Text>
                   </View>
                 ) : null}

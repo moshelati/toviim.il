@@ -204,13 +204,7 @@ export function HomeScreen({ navigation }: Props) {
         {/* Continue last claim */}
         {activeClaim && (
           <Card
-            onPress={() => {
-              if (activeClaim.status === 'chat') {
-                navigation.navigate('ClaimChat', { claimId: activeClaim.id, claimType: activeClaim.claimType ?? '' });
-              } else {
-                navigation.navigate('ClaimDetail', { claimId: activeClaim.id });
-              }
-            }}
+            onPress={() => navigation.navigate('ClaimHub', { claimId: activeClaim.id })}
             style={styles.continueCard}
           >
             <View style={styles.continueRow}>
@@ -263,13 +257,7 @@ export function HomeScreen({ navigation }: Props) {
               return (
                 <Card
                   key={c.id}
-                  onPress={() => {
-                    if (c.status === 'chat') {
-                      navigation.navigate('ClaimChat', { claimId: c.id, claimType: c.claimType ?? '' });
-                    } else {
-                      navigation.navigate('ClaimDetail', { claimId: c.id });
-                    }
-                  }}
+                  onPress={() => navigation.navigate('ClaimHub', { claimId: c.id })}
                   style={styles.claimCard}
                 >
                   <View style={styles.claimRow}>
