@@ -8,6 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../types/navigation';
 import { getClaim, recalculateConfidence } from '../../lib/claimsService';
+import { getOrCreateGraph } from '../../graph/storage';
+import { scoreGraph } from '../../engine/graphScoring';
+import type { GraphScoreResult, GraphScoreBreakdown } from '../../engine/graphScoring';
+import type { CaseGraph } from '../../graph/types';
 import {
   getReadinessLabel, getReadinessColor,
   getStrengthLabel, getStrengthColor,
@@ -25,21 +29,32 @@ import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '..
 type Props = NativeStackScreenProps<AppStackParamList, 'Confidence'>;
 
 const CLAIM_TYPE_HE: Record<string, string> = {
-  consumer: '\u05E6\u05E8\u05DB\u05E0\u05D5\u05EA',
-  landlord: '\u05E9\u05DB\u05D9\u05E8\u05D5\u05EA',
-  employer: '\u05E2\u05D1\u05D5\u05D3\u05D4',
-  neighbor: '\u05E9\u05DB\u05E0\u05D9\u05DD',
-  contract: '\u05D7\u05D5\u05D6\u05D4',
-  other:    '\u05D0\u05D7\u05E8',
+  consumer: 'צרכנות',
+  landlord: 'שכירות',
+  employer: 'עבודה',
+  neighbor: 'שכנים',
+  contract: 'חוזה',
+  other:    'אחר',
 };
 
 const BREAKDOWN_LABELS: { key: keyof ScoreBreakdown; label: string; max: number; icon: string }[] = [
-  { key: 'requiredFields', label: '\u05E9\u05D3\u05D5\u05EA \u05D7\u05D5\u05D1\u05D4',  max: 40, icon: '\u270F\uFE0F' },
-  { key: 'evidence',       label: '\u05E8\u05D0\u05D9\u05D5\u05EA',          max: 15, icon: '\uD83D\uDCF7' },
-  { key: 'signature',      label: '\u05D7\u05EA\u05D9\u05DE\u05D4',          max: 15, icon: '\u270D\uFE0F' },
-  { key: 'validAmount',    label: '\u05E1\u05DB\u05D5\u05DD',           max: 10, icon: '\uD83D\uDCB0' },
-  { key: 'demands',        label: '\u05E1\u05E2\u05D3\u05D9\u05DD',          max: 10, icon: '\uD83D\uDCCB' },
-  { key: 'timeline',       label: '\u05E6\u05D9\u05E8 \u05D6\u05DE\u05DF',       max: 10, icon: '\uD83D\uDCC5' },
+  { key: 'requiredFields', label: 'שדות חובה',  max: 40, icon: '✏️' },
+  { key: 'evidence',       label: 'ראיות',          max: 15, icon: '📷' },
+  { key: 'signature',      label: 'חתימה',          max: 15, icon: '✍️' },
+  { key: 'validAmount',    label: 'סכום',           max: 10, icon: '💰' },
+  { key: 'demands',        label: 'סעדים',          max: 10, icon: '📋' },
+  { key: 'timeline',       label: 'ציר זמן',       max: 10, icon: '📅' },
+];
+
+// Graph-based breakdown labels
+const GRAPH_BREAKDOWN_LABELS: { key: keyof GraphScoreBreakdown; label: string; max: number; icon: string }[] = [
+  { key: 'plaintiffData',  label: 'פרטי תובע',     max: 20, icon: '👤' },
+  { key: 'defendantData',  label: 'פרטי נתבע',     max: 10, icon: '🏢' },
+  { key: 'claimSubstance', label: 'סכום ודרישות',  max: 15, icon: '💰' },
+  { key: 'narrative',      label: 'ציר זמן',       max: 15, icon: '📅' },
+  { key: 'evidenceScore',  label: 'ראיות',          max: 20, icon: '📷' },
+  { key: 'procedural',     label: 'הליך',           max: 10, icon: '✉️' },
+  { key: 'legalBasis',     label: 'בסיס משפטי',    max: 10, icon: '⚖️' },
 ];
 
 function getBreakdownColor(value: number, max: number): string {
@@ -74,6 +89,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
 
   const [claim, setClaim] = useState<Claim | null>(null);
   const [breakdown, setBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [graphScores, setGraphScores] = useState<GraphScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -110,6 +126,16 @@ export function ConfidenceScreen({ route, navigation }: Props) {
     if (c) {
       const result = calculateConfidence(buildScoring(c));
       setBreakdown(result.breakdown);
+
+      // Also load graph-based scores
+      try {
+        const { getOrCreateGraph } = await import('../../graph/storage');
+        const graph = await getOrCreateGraph(c);
+        const gScores = scoreGraph(graph);
+        setGraphScores(gScores);
+      } catch {
+        // Fallback — graph not available yet
+      }
     }
     setLoading(false);
     // Animate in
@@ -137,19 +163,20 @@ export function ConfidenceScreen({ route, navigation }: Props) {
     return (
       <View style={styles.container}>
         <AppHeader
-          title={'\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA'}
+          title="ציון מוכנות"
           onBack={() => navigation.goBack()}
         />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>{'\u05DE\u05D7\u05E9\u05D1 \u05E6\u05D9\u05D5\u05DF...'}</Text>
+          <Text style={styles.loadingText}>מחשב ציון...</Text>
         </View>
       </View>
     );
   }
 
-  const readinessScore = claim?.readinessScore ?? 0;
-  const strengthScore = claim?.strengthScore ?? 'weak';
+  // Use graph-based score if available, otherwise fall back to flat score
+  const readinessScore = graphScores?.readinessScore ?? claim?.readinessScore ?? 0;
+  const strengthScore = graphScores?.strengthScore ?? claim?.strengthScore ?? 'weak';
   const riskFlags = claim?.riskFlags ?? [];
   const missingFields = claim?.missingFields ?? [];
   const suggestions = claim?.suggestions ?? [];
@@ -164,14 +191,14 @@ export function ConfidenceScreen({ route, navigation }: Props) {
       <StatusBar barStyle="light-content" />
 
       <AppHeader
-        title={'\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA'}
+        title="ציון מוכנות"
         subtitle={claim?.claimType ? (CLAIM_TYPE_HE[claim.claimType] ?? claim.claimType) : undefined}
         onBack={() => navigation.goBack()}
         rightIcon={
           refreshing ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={{ fontSize: 18 }}>{'\uD83D\uDD04'}</Text>
+            <Text style={{ fontSize: 18 }}>🔄</Text>
           )
         }
         onRight={handleRefresh}
@@ -184,7 +211,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
       >
         {/* ─── Main Score Card ─────────────────────────────── */}
         <Card style={styles.mainScoreCard}>
-          <Text style={styles.mainScoreLabel}>{'\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4'}</Text>
+          <Text style={styles.mainScoreLabel}>ציון מוכנות התביעה</Text>
           <View style={styles.mainScoreCenter}>
             <ProgressRing score={readinessScore} size={140} strokeWidth={8} />
           </View>
@@ -201,17 +228,59 @@ export function ConfidenceScreen({ route, navigation }: Props) {
           {highRisks.length > 0 && (
             <View style={styles.alertBanner}>
               <Text style={styles.alertText}>
-                {'\u26A0\uFE0F'} {highRisks.length} {'\u05D3\u05D2\u05DC\u05D9 \u05E1\u05D9\u05DB\u05D5\u05DF \u05D2\u05D1\u05D5\u05D4\u05D9\u05DD'}
-                {requiredMissing.length > 0 ? ` \u00B7 ${requiredMissing.length} \u05E9\u05D3\u05D5\u05EA \u05D7\u05D5\u05D1\u05D4` : ''}
+                ⚠️ {highRisks.length} דגלי סיכון גבוהים
+                {requiredMissing.length > 0 ? ` · ${requiredMissing.length} שדות חובה` : ''}
               </Text>
             </View>
           )}
         </Card>
 
-        {/* ─── Score Breakdown ─────────────────────────────── */}
-        {breakdown && (
+        {/* ─── Graph-Based Score Breakdown (preferred) ────────── */}
+        {graphScores && (
           <Card style={styles.breakdownCard}>
-            <Text style={styles.sectionTitle}>{'\uD83D\uDCCA \u05E4\u05D9\u05E8\u05D5\u05D8 \u05E6\u05D9\u05D5\u05DF'}</Text>
+            <Text style={styles.sectionTitle}>📊 פירוט ציון (גרף)</Text>
+            {GRAPH_BREAKDOWN_LABELS.map(item => {
+              const val = graphScores.breakdown[item.key];
+              const pct = Math.round((val / item.max) * 100);
+              const color = getBreakdownColor(val, item.max);
+              return (
+                <View key={item.key} style={styles.breakdownRow}>
+                  <View style={styles.breakdownLabelRow}>
+                    <Text style={styles.breakdownIcon}>{item.icon}</Text>
+                    <Text style={styles.breakdownLabel}>{item.label}</Text>
+                    <Text style={[styles.breakdownValue, { color }]}>
+                      {val}/{item.max}
+                    </Text>
+                  </View>
+                  <View style={styles.breakdownBarBg}>
+                    <View style={[styles.breakdownBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+                  </View>
+                </View>
+              );
+            })}
+
+            {/* Sub-scores */}
+            <View style={styles.subScoresRow}>
+              <View style={styles.subScoreChip}>
+                <Text style={styles.subScoreValue}>{graphScores.evidenceCoverage}%</Text>
+                <Text style={styles.subScoreLabel}>כיסוי ראיות</Text>
+              </View>
+              <View style={styles.subScoreChip}>
+                <Text style={styles.subScoreValue}>{graphScores.timelineConsistency}%</Text>
+                <Text style={styles.subScoreLabel}>עקביות ציר זמן</Text>
+              </View>
+              <View style={styles.subScoreChip}>
+                <Text style={styles.subScoreValue}>{graphScores.legalCompleteness}%</Text>
+                <Text style={styles.subScoreLabel}>שלמות משפטית</Text>
+              </View>
+            </View>
+          </Card>
+        )}
+
+        {/* ─── Legacy Score Breakdown (fallback) ────────────── */}
+        {!graphScores && breakdown && (
+          <Card style={styles.breakdownCard}>
+            <Text style={styles.sectionTitle}>📊 פירוט ציון</Text>
             {BREAKDOWN_LABELS.map(item => {
               const val = breakdown[item.key];
               const pct = Math.round((val / item.max) * 100);
@@ -237,7 +306,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {/* ─── Strength Card ──────────────────────────────── */}
         <Card style={styles.strengthCard}>
           <View style={styles.strengthHeader}>
-            <Text style={styles.strengthTitle}>{'\u2696\uFE0F \u05E2\u05D5\u05E6\u05DE\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4'}</Text>
+            <Text style={styles.strengthTitle}>⚖️ עוצמת התביעה</Text>
             <Badge
               label={getStrengthLabel(strengthScore)}
               variant={strengthScore === 'strong' ? 'success' : strengthScore === 'medium' ? 'warning' : 'danger'}
@@ -245,10 +314,10 @@ export function ConfidenceScreen({ route, navigation }: Props) {
           </View>
           <Text style={styles.strengthDesc}>
             {strengthScore === 'strong'
-              ? '\u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05E9\u05DC\u05DA \u05E0\u05E8\u05D0\u05D9\u05EA \u05D7\u05D6\u05E7\u05D4 \u05E2\u05DD \u05E8\u05D0\u05D9\u05D5\u05EA \u05EA\u05D5\u05DE\u05DB\u05D5\u05EA \u05D5\u05EA\u05D9\u05E2\u05D5\u05D3 \u05DE\u05E1\u05E4\u05E7.'
+              ? 'התביעה שלך נראית חזקה עם ראיות תומכות ותיעוד מספק.'
               : strengthScore === 'medium'
-                ? '\u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D1\u05D9\u05E0\u05D5\u05E0\u05D9\u05EA. \u05E0\u05D9\u05EA\u05DF \u05DC\u05D7\u05D6\u05E7 \u05D0\u05D5\u05EA\u05D4 \u05E2\u05DD \u05E8\u05D0\u05D9\u05D5\u05EA \u05D5\u05EA\u05D9\u05E2\u05D5\u05D3 \u05E0\u05D5\u05E1\u05E4\u05D9\u05DD.'
-                : '\u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D3\u05D5\u05E8\u05E9\u05EA \u05D7\u05D9\u05D6\u05D5\u05E7. \u05DE\u05D5\u05DE\u05DC\u05E5 \u05DC\u05D0\u05E1\u05D5\u05E3 \u05E8\u05D0\u05D9\u05D5\u05EA \u05E0\u05D5\u05E1\u05E4\u05D5\u05EA \u05D5\u05DC\u05D4\u05E9\u05DC\u05D9\u05DD \u05E4\u05E8\u05D8\u05D9\u05DD \u05D7\u05E1\u05E8\u05D9\u05DD.'
+                ? 'התביעה בינונית. ניתן לחזק אותה עם ראיות ותיעוד נוספים.'
+                : 'התביעה דורשת חיזוק. מומלץ לאסוף ראיות נוספות ולהשלים פרטים חסרים.'
             }
           </Text>
         </Card>
@@ -257,15 +326,15 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{claim?.evidence?.length ?? 0}</Text>
-            <Text style={styles.statLabel}>{'\u05E8\u05D0\u05D9\u05D5\u05EA'}</Text>
+            <Text style={styles.statLabel}>ראיות</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{claim?.timeline?.length ?? 0}</Text>
-            <Text style={styles.statLabel}>{'\u05D0\u05D9\u05E8\u05D5\u05E2\u05D9\u05DD'}</Text>
+            <Text style={styles.statLabel}>אירועים</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{claim?.demands?.length ?? 0}</Text>
-            <Text style={styles.statLabel}>{'\u05E1\u05E2\u05D3\u05D9\u05DD'}</Text>
+            <Text style={styles.statLabel}>סעדים</Text>
           </View>
         </View>
 
@@ -273,12 +342,12 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {missingFields.length > 0 && (
           <Card style={styles.missingCard}>
             <Text style={styles.sectionTitle}>
-              {'\u274C \u05E9\u05D3\u05D5\u05EA \u05D7\u05E1\u05E8\u05D9\u05DD'} ({missingFields.length})
+              ❌ שדות חסרים ({missingFields.length})
             </Text>
 
             {requiredMissing.length > 0 && (
               <>
-                <Text style={styles.subSectionLabel}>{'\u05D7\u05D5\u05D1\u05D4'}</Text>
+                <Text style={styles.subSectionLabel}>חובה</Text>
                 {requiredMissing.map((field, i) => (
                   <View key={i} style={styles.fieldRow}>
                     <View style={[styles.fieldDot, { backgroundColor: Colors.danger }]} />
@@ -290,7 +359,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
 
             {recommendedMissing.length > 0 && (
               <>
-                <Text style={styles.subSectionLabel}>{'\u05DE\u05D5\u05DE\u05DC\u05E5'}</Text>
+                <Text style={styles.subSectionLabel}>מומלץ</Text>
                 {recommendedMissing.map((field, i) => (
                   <View key={i} style={styles.fieldRow}>
                     <View style={[styles.fieldDot, { backgroundColor: Colors.warning }]} />
@@ -306,7 +375,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {riskFlags.length > 0 && (
           <Card style={styles.riskCard}>
             <Text style={styles.sectionTitle}>
-              {'\u26A0\uFE0F \u05D3\u05D2\u05DC\u05D9 \u05E1\u05D9\u05DB\u05D5\u05DF'} ({riskFlags.length})
+              ⚠️ דגלי סיכון ({riskFlags.length})
             </Text>
             {riskFlags.map((flag, i) => (
               <View key={flag.id ?? i} style={[styles.riskRow, i === riskFlags.length - 1 && { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
@@ -325,7 +394,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {suggestions.length > 0 && (
           <Card style={styles.suggestCard}>
             <Text style={styles.sectionTitle}>
-              {'\uD83D\uDCA1 \u05D4\u05DE\u05DC\u05E6\u05D5\u05EA \u05DC\u05E9\u05D9\u05E4\u05D5\u05E8'}
+              💡 המלצות לשיפור
             </Text>
             {suggestions.map((sug, i) => (
               <TouchableOpacity
@@ -333,13 +402,15 @@ export function ConfidenceScreen({ route, navigation }: Props) {
                 style={[styles.suggestRow, i === suggestions.length - 1 && { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}
                 onPress={() => {
                   if (sug.id === 'add_evidence' || sug.id === 'more_evidence' || sug.id === 'add_signature') {
-                    navigation.navigate('ClaimDetail', { claimId });
+                    navigation.navigate('ClaimHub', { claimId });
                   } else if (sug.id === 'complete_required_fields') {
-                    navigation.navigate('ClaimChat', { claimId, claimType: claim?.claimType ?? '' });
+                    navigation.navigate('ClaimHub', { claimId });
                   } else if (sug.id === 'mock_trial') {
                     navigation.navigate('MockTrial', { claimId });
+                  } else if (sug.id === 'send_notice') {
+                    navigation.navigate('WarningLetter', { claimId });
                   } else {
-                    navigation.navigate('ClaimDetail', { claimId });
+                    navigation.navigate('ClaimHub', { claimId });
                   }
                 }}
                 activeOpacity={0.7}
@@ -352,7 +423,7 @@ export function ConfidenceScreen({ route, navigation }: Props) {
                     <Text style={styles.suggestTitle}>{sug.title}</Text>
                     <Text style={styles.suggestDesc}>{sug.description}</Text>
                   </View>
-                  <Text style={styles.suggestArrow}>{'\u2190'}</Text>
+                  <Text style={styles.suggestArrow}>←</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -362,10 +433,10 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {/* ─── All Good ───────────────────────────────────── */}
         {missingFields.length === 0 && riskFlags.length === 0 && readinessScore >= 70 && (
           <View style={styles.allGoodCard}>
-            <Text style={styles.allGoodIcon}>{'\uD83C\uDF89'}</Text>
-            <Text style={styles.allGoodTitle}>{'\u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05DE\u05D5\u05DB\u05E0\u05D4!'}</Text>
+            <Text style={styles.allGoodIcon}>🎉</Text>
+            <Text style={styles.allGoodTitle}>התביעה מוכנה!</Text>
             <Text style={styles.allGoodSub}>
-              {'\u05DB\u05DC \u05D4\u05E4\u05E8\u05D8\u05D9\u05DD \u05D4\u05E0\u05D3\u05E8\u05E9\u05D9\u05DD \u05D4\u05D5\u05E9\u05DC\u05DE\u05D5. \u05E0\u05D9\u05EA\u05DF \u05DC\u05D4\u05DE\u05E9\u05D9\u05DA \u05DC\u05D9\u05E6\u05D9\u05E8\u05EA \u05DB\u05EA\u05D1 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4.'}
+              כל הפרטים הנדרשים הושלמו. ניתן להמשיך ליצירת כתב התביעה.
             </Text>
           </View>
         )}
@@ -373,11 +444,11 @@ export function ConfidenceScreen({ route, navigation }: Props) {
         {/* ─── Action Buttons ─────────────────────────────── */}
         <View style={styles.actionsSection}>
           <PrimaryButton
-            title={'\uD83D\uDCC4  \u05E6\u05E4\u05D4 \u05D1\u05DB\u05EA\u05D1 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4'}
-            onPress={() => navigation.navigate('ClaimDetail', { claimId })}
+            title="📄  המשך למרכז התביעה"
+            onPress={() => navigation.navigate('ClaimHub', { claimId })}
           />
           <SecondaryButton
-            title={'\u2696\uFE0F  \u05EA\u05E8\u05D2\u05DC \u05DE\u05D5\u05E7-\u05D8\u05E8\u05D9\u05D0\u05DC'}
+            title="⚖️  תרגל מוק-טריאל"
             onPress={() => navigation.navigate('MockTrial', { claimId })}
             style={{ marginTop: Spacing.sm }}
           />
@@ -426,6 +497,18 @@ const styles = StyleSheet.create({
     height: 6, backgroundColor: Colors.gray200, borderRadius: 3, overflow: 'hidden',
   },
   breakdownBarFill: { height: '100%', borderRadius: 3 },
+
+  // Sub-scores row
+  subScoresRow: {
+    flexDirection: 'row-reverse', gap: Spacing.sm, marginTop: Spacing.md,
+    paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  subScoreChip: {
+    flex: 1, alignItems: 'center', backgroundColor: Colors.gray50,
+    borderRadius: Radius.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs,
+  },
+  subScoreValue: { ...Typography.bodyLarge, fontWeight: '800', color: Colors.primary },
+  subScoreLabel: { ...Typography.tiny, color: Colors.muted, marginTop: 2, textAlign: 'center' },
 
   // Section title
   sectionTitle: {

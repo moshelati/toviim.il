@@ -35,8 +35,8 @@ export function LoginScreen({ navigation }: Props) {
 
   function validate(): boolean {
     const e: Record<string,string> = {};
-    if (!email.includes('@')) e.email    = '\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC \u05DC\u05D0 \u05EA\u05E7\u05D9\u05E0\u05D4';
-    if (!password)             e.password = '\u05E0\u05D0 \u05DC\u05D4\u05D6\u05D9\u05DF \u05E1\u05D9\u05E1\u05DE\u05D4';
+    if (!email.includes('@')) e.email    = 'כתובת מייל לא תקינה';
+    if (!password)             e.password = 'נא להזין סיסמה';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -47,10 +47,10 @@ export function LoginScreen({ navigation }: Props) {
     try {
       await signIn(email.trim().toLowerCase(), password);
     } catch (err: any) {
-      let msg = '\u05E4\u05E8\u05D8\u05D9 \u05D4\u05DB\u05E0\u05D9\u05E1\u05D4 \u05E9\u05D2\u05D5\u05D9\u05D9\u05DD. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1.';
-      if (err.code === 'auth/user-not-found')    msg = '\u05DC\u05D0 \u05E0\u05DE\u05E6\u05D0 \u05D7\u05E9\u05D1\u05D5\u05DF \u05E2\u05DD \u05DE\u05D9\u05D9\u05DC \u05D6\u05D4.';
-      if (err.code === 'auth/wrong-password')    msg = '\u05D4\u05E1\u05D9\u05E1\u05DE\u05D4 \u05E9\u05D2\u05D5\u05D9\u05D4.';
-      if (err.code === 'auth/too-many-requests') msg = '\u05E0\u05D7\u05E1\u05DE\u05EA \u05D6\u05DE\u05E0\u05D9\u05EA \u05E2\u05E7\u05D1 \u05E0\u05D9\u05E1\u05D9\u05D5\u05E0\u05D5\u05EA \u05E8\u05D1\u05D9\u05DD. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1 \u05DE\u05D0\u05D5\u05D7\u05E8 \u05D9\u05D5\u05EA\u05E8.';
+      let msg = 'פרטי הכניסה שגויים. נסה/י שוב.';
+      if (err.code === 'auth/user-not-found')    msg = 'לא נמצא חשבון עם מייל זה.';
+      if (err.code === 'auth/wrong-password')    msg = 'הסיסמה שגויה.';
+      if (err.code === 'auth/too-many-requests') msg = 'נחסמת זמנית עקב ניסיונות רבים. נסה/י שוב מאוחר יותר.';
       setErrorMsg(msg);
       setErrorSheet(true);
     } finally {
@@ -63,7 +63,7 @@ export function LoginScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" />
 
       <AppHeader
-        title={'\u2696\uFE0F \u05EA\u05D5\u05D1\u05D9\u05D9\u05DD.il'}
+        title="⚖️ תוביים.il"
         onBack={() => navigation.goBack()}
       />
 
@@ -77,12 +77,12 @@ export function LoginScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{'\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
-          <Text style={styles.subtitle}>{'\u05D1\u05E8\u05D5\u05DA/\u05D4 \u05D4\u05D1\u05D0/\u05D4 \u05D7\u05D6\u05E8\u05D4'}</Text>
+          <Text style={styles.title}>כניסה לחשבון</Text>
+          <Text style={styles.subtitle}>ברוך/ה הבא/ה חזרה</Text>
 
           <View style={styles.formCard}>
             <Input
-              label={'\u05DB\u05EA\u05D5\u05D1\u05EA \u05DE\u05D9\u05D9\u05DC'}
+              label="כתובת מייל"
               placeholder="example@email.com"
               value={email}
               onChangeText={setEmail}
@@ -93,23 +93,23 @@ export function LoginScreen({ navigation }: Props) {
               textContentType="emailAddress"
             />
             <Input
-              label={'\u05E1\u05D9\u05E1\u05DE\u05D4'}
-              placeholder={'\u05D4\u05E1\u05D9\u05E1\u05DE\u05D4 \u05E9\u05DC\u05DA'}
+              label="סיסמה"
+              placeholder="הסיסמה שלך"
               value={password}
               onChangeText={setPassword}
               error={errors.password}
               secureTextEntry={!showPw}
               textContentType="password"
-              rightIcon={<Text style={styles.eyeIcon}>{showPw ? '\uD83D\uDE48' : '\uD83D\uDC41\uFE0F'}</Text>}
+              rightIcon={<Text style={styles.eyeIcon}>{showPw ? '🙈' : '👁️'}</Text>}
               onRightIconPress={() => setShowPw(!showPw)}
             />
 
             <TouchableOpacity style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>{'\u05E9\u05DB\u05D7\u05EA \u05E1\u05D9\u05E1\u05DE\u05D4?'}</Text>
+              <Text style={styles.forgotText}>שכחת סיסמה?</Text>
             </TouchableOpacity>
 
             <Button
-              label={'\u05DB\u05E0\u05D9\u05E1\u05D4 \u05DC\u05D7\u05E9\u05D1\u05D5\u05DF'}
+              label="כניסה לחשבון"
               onPress={handleLogin}
               size="lg"
               loading={loading}
@@ -119,15 +119,15 @@ export function LoginScreen({ navigation }: Props) {
 
           {/* Sign up link */}
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>{'\u05E2\u05D3\u05D9\u05D9\u05DF \u05D0\u05D9\u05DF \u05DC\u05DA \u05D7\u05E9\u05D1\u05D5\u05DF? '}</Text>
+            <Text style={styles.signupText}>עדיין אין לך חשבון? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.signupLink}>{'\u05D4\u05E8\u05E9\u05DE\u05D4 \u05D7\u05D9\u05E0\u05DD'}</Text>
+              <Text style={styles.signupLink}>הרשמה חינם</Text>
             </TouchableOpacity>
           </View>
 
           {/* Security badge */}
           <View style={styles.securityBadge}>
-            <Text style={styles.securityText}>{'\uD83D\uDD12 \u05DE\u05D0\u05D5\u05D1\u05D8\u05D7 \u05E2\u05DD Firebase Auth \u00B7 SSL \u05DE\u05D5\u05E6\u05E4\u05DF'}</Text>
+            <Text style={styles.securityText}>🔒 מאובטח עם Firebase Auth · SSL מוצפן</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -135,10 +135,10 @@ export function LoginScreen({ navigation }: Props) {
       <BottomSheet
         visible={errorSheet}
         onClose={() => setErrorSheet(false)}
-        icon={'\u274C'}
-        title={'\u05E9\u05D2\u05D9\u05D0\u05EA \u05DB\u05E0\u05D9\u05E1\u05D4'}
+        icon="❌"
+        title="שגיאת כניסה"
         body={errorMsg}
-        primaryLabel={'\u05E0\u05E1\u05D4 \u05E9\u05D5\u05D1'}
+        primaryLabel="נסה שוב"
         onPrimary={() => setErrorSheet(false)}
       />
     </View>

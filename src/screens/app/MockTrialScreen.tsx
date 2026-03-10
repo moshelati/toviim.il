@@ -10,10 +10,17 @@ import { useAuth } from '../../context/AuthContext';
 import { sendMessage, AIError } from '../../ai';
 import type { GeminiMessage } from '../../ai';
 import { getClaim } from '../../lib/claimsService';
+import { getOrCreateGraph } from '../../graph/storage';
+import {
+  getPlaintiff, getDefendants, getDemands, getEvents,
+  getEvidence, getTotalAmount,
+  getUncoveredEvents, hasPriorNotice,
+} from '../../graph/queries';
+import { scoreGraph } from '../../engine/graphScoring';
+import type { CaseGraph } from '../../graph/types';
 import { Claim, ChatMessage } from '../../types/claim';
 import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '../../theme';
 import { AppHeader } from '../../components/ui/AppHeader';
-import { BottomSheet } from '../../components/ui/BottomSheet';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'MockTrial'>;
 
@@ -30,14 +37,42 @@ const ROLE_COLOR: Record<TrialRole, string> = {
   defendant: '#b45309',
 };
 
-// ─── Build mock-trial system prompt ──────────────────────────────────────────
-function buildMockTrialPrompt(claim: Claim, role: TrialRole): string {
+// ─── Build mock-trial system prompt (graph-enhanced) ─────────────────────────
+function buildTrialPrompt(claim: Claim, graph: CaseGraph | null, role: TrialRole): string {
+  // Graph-based data (preferred) with fallback to flat claim
+  const plaintiff = graph ? getPlaintiff(graph) : null;
+  const defendants = graph ? getDefendants(graph) : [];
+  const demands = graph ? getDemands(graph) : [];
+  const events = graph ? getEvents(graph) : [];
+  const evidence = graph ? getEvidence(graph) : [];
+  const totalAmount = graph ? getTotalAmount(graph) : (claim.amountClaimedNis || claim.amount || 0);
+  const priorNotice = graph ? hasPriorNotice(graph) : !!claim.hasPriorNotice;
+  const uncoveredEvents = graph ? getUncoveredEvents(graph) : [];
+  const scores = graph ? scoreGraph(graph) : null;
+
+  const plaintiffName = plaintiff?.fullName || claim.plaintiffName || claim.plaintiff?.fullName || 'לא ידוע';
+  const defendantName = defendants[0]?.fullName || claim.defendant || claim.defendants?.[0]?.name || 'לא ידוע';
   const claimSummary = claim.factsSummary || claim.summary || 'פרטי התביעה לא זמינים.';
-  const plaintiffName = claim.plaintiffName || claim.plaintiff?.fullName || 'לא ידוע';
-  const defendantName = claim.defendant || claim.defendants?.[0]?.name || 'לא ידוע';
-  const claimAmount = claim.amountClaimedNis || claim.amount || '?';
-  const demands = claim.demands?.join(', ') || '';
-  const timeline = claim.timeline?.map(e => `${e.date}: ${e.description}`).join('\n') || '';
+
+  // Build rich timeline from graph events
+  const timelineText = events.length > 0
+    ? events.map(e => `${e.date || '?'}: ${e.description || e.label}`).join('\n')
+    : claim.timeline?.map(e => `${e.date}: ${e.description}`).join('\n') || '';
+
+  // Build demands text from graph
+  const demandsText = demands.length > 0
+    ? demands.map(d => `- ${d.description || d.label}${d.amountNis ? ` (${d.amountNis.toLocaleString('he-IL')} ₪)` : ''}`).join('\n')
+    : claim.demands?.join(', ') || '';
+
+  // Evidence summary for richer context
+  const evidenceSummary = evidence.length > 0
+    ? `נמצאו ${evidence.length} ראיות. ${uncoveredEvents.length > 0 ? `${uncoveredEvents.length} אירועים ללא ראיה תומכת.` : 'כל האירועים מגובים בראיות.'}`
+    : 'אין ראיות מצורפות לתביעה.';
+
+  // Strength assessment
+  const strengthText = scores
+    ? `ציון מוכנות: ${scores.readinessScore}%, כיסוי ראיות: ${scores.evidenceCoverage}%`
+    : '';
 
   if (role === 'judge') {
     return `
@@ -48,10 +83,13 @@ function buildMockTrialPrompt(claim: Claim, role: TrialRole): string {
 פרטי התיק:
 - תובע: ${plaintiffName}
 - נתבע: ${defendantName}
-- סכום: ₪${claimAmount}
+- סכום: ₪${typeof totalAmount === 'number' ? totalAmount.toLocaleString('he-IL') : totalAmount}
 - תקציר: ${claimSummary}
-${demands ? `- סעדים מבוקשים: ${demands}` : ''}
-${timeline ? `- ציר זמן:\n${timeline}` : ''}
+${demandsText ? `- סעדים מבוקשים:\n${demandsText}` : ''}
+${timelineText ? `- ציר זמן:\n${timelineText}` : ''}
+- הודעה מוקדמת: ${priorNotice ? 'נשלחה' : 'לא נשלחה'}
+- מצב ראיות: ${evidenceSummary}
+${strengthText ? `- הערכה: ${strengthText}` : ''}
 
 תפקידך:
 1. לנהל את הדיון בצורה מקצועית וענינית.
@@ -61,6 +99,8 @@ ${timeline ? `- ציר זמן:\n${timeline}` : ''}
 5. לאחר 6-8 שאלות, לסכם ולתת "פסיקה מקדמית" עם הנמקה.
 6. לדבר בגוף שלישי כשמתייחס לשופט: "בית המשפט סבור..."
 7. לדבר בעברית פורמלית ותמציתית.
+${uncoveredEvents.length > 0 ? `8. שים לב: ${uncoveredEvents.length} אירועים בתיק חסרים ראיות — שאל על כך.` : ''}
+${!priorNotice ? '9. שאל על כך שלא נשלחה הודעה מוקדמת לנתבע.' : ''}
 
 פתח בהכרזה רשמית ובשאלה הראשונה לתובע.
     `.trim();
@@ -74,9 +114,10 @@ ${timeline ? `- ציר זמן:\n${timeline}` : ''}
 פרטי התיק נגדך:
 - תובע: ${plaintiffName}
 - אתה (הנתבע): ${defendantName}
-- סכום הנתבע: ₪${claimAmount}
+- סכום הנתבע: ₪${typeof totalAmount === 'number' ? totalAmount.toLocaleString('he-IL') : totalAmount}
 - טענות התובע: ${claimSummary}
-${demands ? `- סעדים מבוקשים: ${demands}` : ''}
+${demandsText ? `- סעדים מבוקשים:\n${demandsText}` : ''}
+- מצב ראיות של התובע: ${evidenceSummary}
 
 תפקידך:
 1. להגן על עצמך מהטענות שנטענו נגדך.
@@ -84,6 +125,7 @@ ${demands ? `- סעדים מבוקשים: ${demands}` : ''}
 3. להעלות טענות נגד (תביעה שכנגד) אם רלוונטי.
 4. לא לקבל את כל הטענות, אבל גם לא לסרב לכולן.
 5. לדבר בעברית פשוטה ויומיומית.
+${uncoveredEvents.length > 0 ? `6. נצל את העובדה שיש ${uncoveredEvents.length} אירועים ללא ראיות — תקוף נקודות חלשות.` : ''}
 
 כשהמשתמש פותח בדיבור, השב כנתבע.
   `.trim();
@@ -97,6 +139,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
   const flatListRef = useRef<FlatList>(null);
 
   const [claim,       setClaim]       = useState<Claim | null>(null);
+  const [graph,       setGraph]       = useState<CaseGraph | null>(null);
   const [activeRole,  setActiveRole]  = useState<TrialRole>('judge');
   const [messages,    setMessages]    = useState<ChatMessage[]>([]);
   const [inputText,   setInputText]   = useState('');
@@ -105,24 +148,32 @@ export function MockTrialScreen({ route, navigation }: Props) {
   const [trialOver,   setTrialOver]   = useState(false);
   const [verdict,     setVerdict]     = useState('');
 
-  // ── Load claim & open trial ───────────────────────────────────────────────
+  // ── Load claim & graph, then open trial ─────────────────────────────────────
   useEffect(() => {
     (async () => {
       const c = await getClaim(claimId);
       if (!c) { Alert.alert('שגיאה', 'לא נמצא התיק'); return; }
       setClaim(c);
-      await startTrial(c, 'judge');
+
+      // Load graph for richer context
+      try {
+        const g = await getOrCreateGraph(c);
+        setGraph(g);
+        await startTrial(c, g, 'judge');
+      } catch {
+        await startTrial(c, null, 'judge');
+      }
     })();
   }, []);
 
-  async function startTrial(c: Claim, role: TrialRole) {
+  async function startTrial(c: Claim, g: CaseGraph | null, role: TrialRole) {
     setMessages([]);
     setTrialOver(false);
     setVerdict('');
     setInitialized(false);
     setIsTyping(true);
     try {
-      const systemPrompt = buildMockTrialPrompt(c, role);
+      const systemPrompt = buildTrialPrompt(c, g, role);
       const opening = await sendMessage(
         [{ role: 'user', parts: [{ text: 'פתח את הדיון' }] }],
         systemPrompt,
@@ -133,7 +184,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
       const fallback: ChatMessage = {
         role: 'model',
         text: role === 'judge'
-          ? `בית משפט לתביעות קטנות נמצא בישיבה.\nכבוד השופט כהן מציין: פתחנו בדיון בתיק ${claim?.plaintiffName ?? ''}.\nהתובע, אנא הצג את טענותיך.`
+          ? `בית משפט לתביעות קטנות נמצא בישיבה.\nכבוד השופט כהן מציין: פתחנו בדיון בתיק ${c.plaintiffName ?? ''}.\nהתובע, אנא הצג את טענותיך.`
           : `שלום, אני הנתבע. אני מוכן לשמוע את הטענות נגדי ולהגיב עליהן.`,
         timestamp: Date.now(),
       };
@@ -148,7 +199,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
   async function handleSwitchRole(role: TrialRole) {
     if (!claim || role === activeRole) return;
     setActiveRole(role);
-    await startTrial(claim, role);
+    await startTrial(claim, graph, role);
   }
 
   // ── Send message ──────────────────────────────────────────────────────────
@@ -167,7 +218,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
         role:  m.role,
         parts: [{ text: m.text }],
       }));
-      const systemPrompt = buildMockTrialPrompt(claim, activeRole);
+      const systemPrompt = buildTrialPrompt(claim, graph, activeRole);
       const aiText = await sendMessage(history, systemPrompt);
 
       const aiMsg: ChatMessage = { role: 'model', text: aiText, timestamp: Date.now() };
@@ -190,7 +241,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
     } finally {
       setIsTyping(false);
     }
-  }, [inputText, messages, isTyping, claim, activeRole]);
+  }, [inputText, messages, isTyping, claim, graph, activeRole]);
 
   // ── Scroll to bottom ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -240,7 +291,7 @@ export function MockTrialScreen({ route, navigation }: Props) {
         <View style={styles.verdictActions}>
           <TouchableOpacity
             style={styles.verdictBtn}
-            onPress={() => startTrial(claim!, activeRole)}
+            onPress={() => startTrial(claim!, graph, activeRole)}
           >
             <Text style={styles.verdictBtnText}>🔄 דיון חדש</Text>
           </TouchableOpacity>

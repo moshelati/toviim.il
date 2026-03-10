@@ -45,58 +45,58 @@ function StepCard({ number, emoji, title, description }: StepCardProps) {
 const STEPS: StepCardProps[] = [
   {
     number: 1,
-    emoji: '\uD83D\uDCDD',
-    title: '\u05D1\u05D7\u05E8/\u05D9 \u05E1\u05D5\u05D2 \u05EA\u05D1\u05D9\u05E2\u05D4',
-    description: '\u05E6\u05E8\u05DB\u05E0\u05D5\u05EA, \u05E9\u05DB\u05D9\u05E8\u05D5\u05EA, \u05E2\u05D1\u05D5\u05D3\u05D4, \u05E9\u05DB\u05E0\u05D9\u05DD, \u05D7\u05D5\u05D6\u05D4 \u05D0\u05D5 \u05D0\u05D7\u05E8. \u05D4\u05DE\u05E2\u05E8\u05DB\u05EA \u05EA\u05EA\u05D0\u05D9\u05DD \u05D0\u05EA \u05D4\u05E9\u05D0\u05DC\u05D5\u05EA \u05DC\u05E1\u05D5\u05D2 \u05E9\u05D1\u05D7\u05E8\u05EA.',
+    emoji: '📝',
+    title: 'בחר/י סוג תביעה',
+    description: 'צרכנות, שכירות, עבודה, שכנים, חוזה או אחר. המערכת תתאים את השאלות לסוג שבחרת.',
   },
   {
     number: 2,
-    emoji: '\uD83E\uDD16',
-    title: '\u05E8\u05D0\u05D9\u05D5\u05DF AI \u05DE\u05D5\u05E0\u05D7\u05D4',
-    description: '\u05E2\u05E0\u05D4/\u05D9 \u05E2\u05DC \u05E9\u05D0\u05DC\u05D5\u05EA \u05DE\u05E0\u05D7\u05D5\u05EA \u05E9\u05D4\u05DE\u05E2\u05E8\u05DB\u05EA \u05E9\u05D5\u05D0\u05DC\u05EA. \u05D4-AI \u05DE\u05D7\u05DC\u05E5 \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9\u05EA \u05D0\u05EA \u05DB\u05DC \u05D4\u05E4\u05E8\u05D8\u05D9\u05DD \u05D4\u05E0\u05D3\u05E8\u05E9\u05D9\u05DD.',
+    emoji: '🤖',
+    title: 'ראיון AI מונחה',
+    description: 'ענה/י על שאלות מנחות שהמערכת שואלת. ה-AI מחלץ אוטומטית את כל הפרטים הנדרשים.',
   },
   {
     number: 3,
-    emoji: '\uD83D\uDCCA',
-    title: '\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA',
-    description: '\u05E7\u05D1\u05DC/\u05D9 \u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA, \u05E1\u05D9\u05DB\u05D5\u05E0\u05D9 \u05E1\u05D9\u05DB\u05D5\u05DF, \u05D3\u05D2\u05DC\u05D9 \u05D0\u05D3\u05D5\u05DD \u05D5\u05D4\u05DE\u05DC\u05E6\u05D5\u05EA \u05DC\u05E9\u05D9\u05E4\u05D5\u05E8.',
+    emoji: '📊',
+    title: 'ציון מוכנות',
+    description: 'קבל/י ציון מוכנות, סיכוני סיכון, דגלי אדום והמלצות לשיפור.',
   },
   {
     number: 4,
-    emoji: '\uD83D\uDCF7',
-    title: '\u05E6\u05E8\u05E3/\u05D9 \u05E8\u05D0\u05D9\u05D5\u05EA',
-    description: '\u05D4\u05E2\u05DC\u05D4 \u05EA\u05DE\u05D5\u05E0\u05D5\u05EA, \u05D7\u05E9\u05D1\u05D5\u05E0\u05D9\u05D5\u05EA, \u05D4\u05EA\u05DB\u05EA\u05D1\u05D5\u05D9\u05D5\u05EA, \u05D7\u05D5\u05D6\u05D9\u05DD \u05D5\u05DB\u05DC \u05DE\u05E1\u05DE\u05DA \u05E8\u05DC\u05D5\u05D5\u05E0\u05D8\u05D9.',
+    emoji: '📷',
+    title: 'צרף/י ראיות',
+    description: 'העלה תמונות, חשבוניות, התכתבויות, חוזים וכל מסמך רלוונטי.',
   },
   {
     number: 5,
-    emoji: '\u2696\uFE0F',
-    title: '\u05DE\u05D5\u05E7-\u05D8\u05E8\u05D9\u05D0\u05DC',
-    description: '\u05EA\u05E8\u05D2\u05DC/\u05D9 \u05DE\u05E9\u05E4\u05D8 \u05DE\u05D3\u05D5\u05DE\u05D4 \u05E2\u05DD \u05D4-AI \u05DB\u05D3\u05D9 \u05DC\u05D4\u05EA\u05DB\u05D5\u05E0\u05DF \u05DC\u05D9\u05D5\u05DD \u05D4\u05D3\u05D9\u05D5\u05DF.',
+    emoji: '⚖️',
+    title: 'מוק-טריאל',
+    description: 'תרגל/י משפט מדומה עם ה-AI כדי להתכונן ליום הדיון.',
   },
   {
     number: 6,
-    emoji: '\uD83D\uDCC4',
-    title: '\u05D9\u05D9\u05E6\u05D5\u05D0 PDF',
-    description: '\u05D4\u05D5\u05E8\u05D3/\u05D9 \u05D8\u05D5\u05E4\u05E1 1 \u05DE\u05D5\u05DB\u05DF \u05DC\u05D4\u05D2\u05E9\u05D4 \u05DC\u05D1\u05D9\u05EA \u05D4\u05DE\u05E9\u05E4\u05D8. \u05DB\u05D5\u05DC\u05DC \u05D7\u05EA\u05D9\u05DE\u05D4 \u05D3\u05D9\u05D2\u05D9\u05D8\u05DC\u05D9\u05EA.',
+    emoji: '📄',
+    title: 'ייצוא PDF',
+    description: 'הורד/י טופס 1 מוכן להגשה לבית המשפט. כולל חתימה דיגיטלית.',
   },
 ];
 
 const FAQ = [
   {
-    q: '\u05DE\u05D4 \u05D4\u05E1\u05DB\u05D5\u05DD \u05D4\u05DE\u05E7\u05E1\u05D9\u05DE\u05DC\u05D9 \u05D1\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA?',
-    a: '\u05E2\u05D3 87,600 \u05E9\u05F4\u05D7 (\u05E0\u05DB\u05D5\u05DF \u05DC\u05D9\u05E0\u05D5\u05D0\u05E8 2025). \u05D4\u05E1\u05DB\u05D5\u05DD \u05DE\u05EA\u05E2\u05D3\u05DB\u05DF \u05DE\u05D3\u05D9 \u05E9\u05E0\u05D4.',
+    q: 'מה הסכום המקסימלי בתביעות קטנות?',
+    a: 'עד 87,600 ש״ח (נכון לינואר 2025). הסכום מתעדכן מדי שנה.',
   },
   {
-    q: '\u05D0\u05D9\u05E4\u05D4 \u05DE\u05D2\u05D9\u05E9\u05D9\u05DD \u05D0\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4?',
-    a: '\u05D9\u05E9 \u05DC\u05D4\u05D2\u05D9\u05E9 \u05D0\u05EA \u05D4\u05D8\u05D5\u05E4\u05E1 \u05D9\u05D7\u05D3 \u05E2\u05DD \u05D4\u05E8\u05D0\u05D9\u05D5\u05EA \u05DC\u05DE\u05D6\u05DB\u05D9\u05E8\u05D5\u05EA \u05D1\u05D9\u05EA \u05D4\u05DE\u05E9\u05E4\u05D8 \u05D4\u05E7\u05E8\u05D5\u05D1. \u05E0\u05D9\u05EA\u05DF \u05D2\u05DD \u05DC\u05D4\u05D2\u05D9\u05E9 \u05D0\u05D5\u05E0\u05DC\u05D9\u05D9\u05DF.',
+    q: 'איפה מגישים את התביעה?',
+    a: 'יש להגיש את הטופס יחד עם הראיות למזכירות בית המשפט הקרוב. ניתן גם להגיש אונליין.',
   },
   {
-    q: '\u05DB\u05DE\u05D4 \u05E2\u05D5\u05DC\u05D4 \u05DC\u05D4\u05D2\u05D9\u05E9 \u05EA\u05D1\u05D9\u05E2\u05D4 \u05E7\u05D8\u05E0\u05D4?',
-    a: '\u05D0\u05D2\u05E8\u05D4 \u05D1\u05E1\u05DA \u05E9\u05DC 1% \u05DE\u05E1\u05DB\u05D5\u05DD \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4, \u05DE\u05D9\u05E0\u05D9\u05DE\u05D5\u05DD 87 \u05E9\u05F4\u05D7 \u05D5\u05DE\u05E7\u05E1\u05D9\u05DE\u05D5\u05DD 876 \u05E9\u05F4\u05D7.',
+    q: 'כמה עולה להגיש תביעה קטנה?',
+    a: 'אגרה בסך של 1% מסכום התביעה, מינימום 87 ש״ח ומקסימום 876 ש״ח.',
   },
   {
-    q: '\u05D4\u05D0\u05DD \u05D0\u05E0\u05D9 \u05E6\u05E8\u05D9\u05DA \u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF?',
-    a: '\u05DC\u05D0! \u05D1\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA \u05D0\u05D9\u05DF \u05D7\u05D5\u05D1\u05EA \u05D9\u05D9\u05E6\u05D5\u05D2 \u05E2\u05D5\u05F4\u05D3. \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05E9\u05DC\u05E0\u05D5 \u05E2\u05D5\u05D6\u05E8\u05EA \u05DC\u05D4\u05DB\u05D9\u05DF \u05D0\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D1\u05E2\u05E6\u05DE\u05DA.',
+    q: 'האם אני צריך עורך דין?',
+    a: 'לא! בתביעות קטנות אין חובת ייצוג עו״ד. האפליקציה שלנו עוזרת להכין את התביעה בעצמך.',
   },
 ];
 
@@ -107,8 +107,8 @@ export function GuideScreen({ navigation }: Props) {
     <View style={styles.screen}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <Text style={styles.headerTitle}>{'\u05DE\u05D3\u05E8\u05D9\u05DA'}</Text>
-        <Text style={styles.headerSub}>{'\u05D0\u05D9\u05DA \u05DE\u05D2\u05D9\u05E9\u05D9\u05DD \u05EA\u05D1\u05D9\u05E2\u05D4 \u05E7\u05D8\u05E0\u05D4 \u05D1-6 \u05E6\u05E2\u05D3\u05D9\u05DD'}</Text>
+        <Text style={styles.headerTitle}>מדריך</Text>
+        <Text style={styles.headerSub}>איך מגישים תביעה קטנה ב-6 צעדים</Text>
       </View>
 
       <ScrollView
@@ -118,29 +118,29 @@ export function GuideScreen({ navigation }: Props) {
       >
         {/* Hero banner */}
         <View style={styles.heroBanner}>
-          <Text style={styles.heroEmoji}>{'\u2696\uFE0F'}</Text>
-          <Text style={styles.heroTitle}>{'\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA'}</Text>
+          <Text style={styles.heroEmoji}>⚖️</Text>
+          <Text style={styles.heroTitle}>תביעות קטנות</Text>
           <Text style={styles.heroSub}>
-            {'\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA \u05D4\u05DF \u05D4\u05D3\u05E8\u05DA \u05D4\u05E4\u05E9\u05D5\u05D8\u05D4 \u05D5\u05D4\u05D6\u05D5\u05DC\u05D4 \u05D1\u05D9\u05D5\u05EA\u05E8 \u05DC\u05E4\u05EA\u05D5\u05E8 \u05E1\u05DB\u05E1\u05D5\u05DB\u05D9\u05DD \u05D0\u05D6\u05E8\u05D7\u05D9\u05D9\u05DD \u05DC\u05DC\u05D0 \u05E2\u05D5\u05F4\u05D3.'}
+            תביעות קטנות הן הדרך הפשוטה והזולה ביותר לפתור סכסוכים אזרחיים ללא עו״ד.
           </Text>
         </View>
 
         {/* Steps */}
-        <Text style={styles.sectionTitle}>{'\u05D4\u05EA\u05D4\u05DC\u05D9\u05DA'}</Text>
+        <Text style={styles.sectionTitle}>התהליך</Text>
         {STEPS.map(step => (
           <StepCard key={step.number} {...step} />
         ))}
 
         {/* CTA */}
         <PrimaryButton
-          title={'\u05D4\u05EA\u05D7\u05DC \u05EA\u05D1\u05D9\u05E2\u05D4 \u05D7\u05D3\u05E9\u05D4'}
+          title="התחל תביעה חדשה"
           onPress={() => navigation.navigate('NewClaim')}
-          icon={'\u2696\uFE0F'}
+          icon="⚖️"
           style={{ marginTop: Spacing.sm, marginBottom: SECTION_GAP }}
         />
 
         {/* FAQ */}
-        <Text style={styles.sectionTitle}>{'\u05E9\u05D0\u05DC\u05D5\u05EA \u05E0\u05E4\u05D5\u05E6\u05D5\u05EA'}</Text>
+        <Text style={styles.sectionTitle}>שאלות נפוצות</Text>
         {FAQ.map((item, i) => (
           <Card key={i} style={styles.faqCard}>
             <Text style={styles.faqQ}>{item.q}</Text>
@@ -150,18 +150,18 @@ export function GuideScreen({ navigation }: Props) {
 
         {/* Tips */}
         <View style={styles.tipBanner}>
-          <Text style={styles.tipTitle}>{'\uD83D\uDCA1 \u05D8\u05D9\u05E4\u05D9\u05DD \u05DC\u05D4\u05E6\u05DC\u05D7\u05D4'}</Text>
+          <Text style={styles.tipTitle}>💡 טיפים להצלחה</Text>
           <Text style={styles.tipText}>
-            {'\u2022 \u05D4\u05DB\u05D9\u05E0\u05D5 \u05D0\u05EA \u05DB\u05DC \u05D4\u05E8\u05D0\u05D9\u05D5\u05EA \u05DE\u05E8\u05D0\u05E9 \u2014 \u05D7\u05E9\u05D1\u05D5\u05E0\u05D9\u05D5\u05EA, \u05D4\u05EA\u05DB\u05EA\u05D1\u05D5\u05D9\u05D5\u05EA, \u05EA\u05DE\u05D5\u05E0\u05D5\u05EA'}
+            • הכינו את כל הראיות מראש — חשבוניות, התכתבויות, תמונות
           </Text>
           <Text style={styles.tipText}>
-            {'\u2022 \u05EA\u05E8\u05D2\u05DC\u05D5 \u05DE\u05D5\u05E7-\u05D8\u05E8\u05D9\u05D0\u05DC \u05DB\u05D3\u05D9 \u05DC\u05D4\u05EA\u05DB\u05D5\u05E0\u05DF \u05DC\u05E9\u05D0\u05DC\u05D5\u05EA \u05D4\u05E9\u05D5\u05E4\u05D8'}
+            • תרגלו מוק-טריאל כדי להתכונן לשאלות השופט
           </Text>
           <Text style={styles.tipText}>
-            {'\u2022 \u05E9\u05D9\u05DE\u05D5 \u05E2\u05DC \u05E6\u05D9\u05E8 \u05D6\u05DE\u05DF \u2014 \u05DE\u05E8\u05D2\u05E2 \u05E9\u05E0\u05D5\u05D3\u05E2 \u05DC\u05DB\u05DD \u05E2\u05DC \u05D4\u05D0\u05D9\u05E8\u05D5\u05E2'}
+            • שימו על ציר זמן — מרגע שנודע לכם על האירוע
           </Text>
           <Text style={styles.tipText}>
-            {'\u2022 \u05D4\u05E9\u05EA\u05DE\u05E9\u05D5 \u05D1\u05E6\u05D9\u05D5\u05DF \u05D4\u05DE\u05D5\u05DB\u05E0\u05D5\u05EA \u05DB\u05D3\u05D9 \u05DC\u05E8\u05D0\u05D5\u05EA \u05D0\u05D9\u05E4\u05D4 \u05DC\u05E9\u05E4\u05E8'}
+            • השתמשו בציון המוכנות כדי לראות איפה לשפר
           </Text>
         </View>
       </ScrollView>

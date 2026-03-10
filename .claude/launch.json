@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Expo Dev Server",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "export PATH=/Users/moshelati/.nvm/versions/node/v24.13.1/bin:$PATH && npx expo start --web --port 8081"],
       "port": 8081
     }
   ]

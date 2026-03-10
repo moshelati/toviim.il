@@ -54,22 +54,22 @@ export function WelcomeScreen({ navigation }: Props) {
         >
           {/* Logo */}
           <View style={styles.logoWrap}>
-            <Text style={styles.logoEmoji}>{'\u2696\uFE0F'}</Text>
+            <Text style={styles.logoEmoji}>⚖️</Text>
           </View>
 
           {/* Headline */}
-          <Text style={styles.title}>{'\u05EA\u05D5\u05D1\u05D9\u05D9\u05DD.il'}</Text>
+          <Text style={styles.title}>תוביים.il</Text>
           <Text style={styles.subtitle}>
-            {'\u05D4\u05E2\u05D5\u05D6\u05E8 \u05D4\u05DE\u05E9\u05E4\u05D8\u05D9 \u05D4\u05D7\u05DB\u05DD \u05E9\u05DC\u05DA'}{'\n'}{'\u05DC\u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA'}
+            העוזר המשפטי החכם שלך{'\n'}לתביעות קטנות
           </Text>
 
           {/* Features */}
           <View style={styles.features}>
             {[
-              { icon: '\uD83E\uDD16', text: '\u05E8\u05D0\u05D9\u05D5\u05DF AI \u05D0\u05D9\u05E9\u05D9 \u05DC\u05D1\u05E0\u05D9\u05D9\u05EA \u05D4\u05EA\u05D9\u05E7 \u05E9\u05DC\u05DA' },
-              { icon: '\uD83D\uDCCA', text: '\u05E6\u05D9\u05D5\u05DF \u05DE\u05D5\u05DB\u05E0\u05D5\u05EA \u05D5\u05E0\u05D9\u05EA\u05D5\u05D7 \u05D7\u05D5\u05D6\u05E7 \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4' },
-              { icon: '\uD83D\uDCC4', text: '\u05D9\u05E6\u05D9\u05E8\u05EA \u05DB\u05EA\u05D1 \u05EA\u05D1\u05D9\u05E2\u05D4 (\u05D8\u05D5\u05E4\u05E1 1) \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9' },
-              { icon: '\u2696\uFE0F', text: '\u05D4\u05DB\u05E0\u05D4 \u05DC\u05D3\u05D9\u05D5\u05DF \u05E2\u05DD \u05E1\u05D9\u05DE\u05D5\u05DC\u05E6\u05D9\u05D9\u05EA \u05E9\u05D5\u05E4\u05D8 AI' },
+              { icon: '🤖', text: 'ראיון AI אישי לבניית התיק שלך' },
+              { icon: '📊', text: 'ציון מוכנות וניתוח חוזק התביעה' },
+              { icon: '📄', text: 'יצירת כתב תביעה (טופס 1) אוטומטי' },
+              { icon: '⚖️', text: 'הכנה לדיון עם סימולציית שופט AI' },
             ].map((f, i) => (
               <View key={i} style={styles.featureRow}>
                 <Text style={styles.featureIcon}>{f.icon}</Text>
@@ -85,19 +85,19 @@ export function WelcomeScreen({ navigation }: Props) {
               activeOpacity={0.9}
               onPress={() => navigation.navigate('Disclaimer')}
             >
-              <Text style={styles.btnPrimaryText}>{'\u05D4\u05EA\u05D7\u05DC \u05E2\u05DB\u05E9\u05D9\u05D5 \u2014 \u05D6\u05D4 \u05D7\u05D9\u05E0\u05DD'}</Text>
+              <Text style={styles.btnPrimaryText}>התחל עכשיו — זה חינם</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.btnSecondary}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('Login')}
             >
-              <Text style={styles.btnSecondaryText}>{'\u05DB\u05D1\u05E8 \u05D9\u05E9 \u05DC\u05D9 \u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
+              <Text style={styles.btnSecondaryText}>כבר יש לי חשבון</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.disclaimer}>
-            {'\u05D0\u05D9\u05DF \u05E6\u05D5\u05E8\u05DA \u05D1\u05DB\u05E8\u05D8\u05D9\u05E1 \u05D0\u05E9\u05E8\u05D0\u05D9 \u00B7 100% \u05D7\u05D9\u05E0\u05DD'}
+            אין צורך בכרטיס אשראי · 100% חינם
           </Text>
         </Animated.View>
       </ScrollView>

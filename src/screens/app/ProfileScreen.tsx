@@ -36,7 +36,7 @@ function MenuItem({ icon, label, sub, onPress, danger }: MenuItemProps) {
         <Text style={[styles.menuLabel, danger && { color: Colors.danger }]}>{label}</Text>
         {sub ? <Text style={styles.menuSub}>{sub}</Text> : null}
       </View>
-      <Text style={styles.menuArrow}>{'\u2190'}</Text>
+      <Text style={styles.menuArrow}>←</Text>
     </TouchableOpacity>
   );
 }
@@ -53,7 +53,7 @@ export function ProfileScreen({ navigation }: Props) {
     <View style={styles.screen}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <Text style={styles.headerTitle}>{'\u05D4\u05D7\u05E9\u05D1\u05D5\u05DF \u05E9\u05DC\u05D9'}</Text>
+        <Text style={styles.headerTitle}>החשבון שלי</Text>
       </View>
 
       <ScrollView
@@ -75,33 +75,33 @@ export function ProfileScreen({ navigation }: Props) {
         </Card>
 
         {/* General section */}
-        <Text style={styles.sectionTitle}>{'\u05DB\u05DC\u05DC\u05D9'}</Text>
+        <Text style={styles.sectionTitle}>כללי</Text>
         <Card style={styles.menuCard}>
           <MenuItem
-            icon={'\uD83D\uDCCB'}
-            label={'\u05EA\u05E0\u05D0\u05D9 \u05E9\u05D9\u05DE\u05D5\u05E9'}
-            sub={'\u05EA\u05E0\u05D0\u05D9 \u05D4\u05E9\u05D9\u05DE\u05D5\u05E9 \u05E9\u05DC \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4'}
+            icon="📋"
+            label="תנאי שימוש"
+            sub="תנאי השימוש של האפליקציה"
             onPress={() => navigation.navigate('Terms')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
-            icon={'\uD83D\uDD12'}
-            label={'\u05DE\u05D3\u05D9\u05E0\u05D9\u05D5\u05EA \u05E4\u05E8\u05D8\u05D9\u05D5\u05EA'}
-            sub={'\u05D0\u05D9\u05DA \u05D0\u05E0\u05D7\u05E0\u05D5 \u05DE\u05E9\u05EA\u05DE\u05E9\u05D9\u05DD \u05D1\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05E9\u05DC\u05DA'}
+            icon="🔒"
+            label="מדיניות פרטיות"
+            sub="איך אנחנו משתמשים בנתונים שלך"
             onPress={() => navigation.navigate('Privacy')}
           />
         </Card>
 
         {/* About section */}
-        <Text style={styles.sectionTitle}>{'\u05D0\u05D5\u05D3\u05D5\u05EA'}</Text>
+        <Text style={styles.sectionTitle}>אודות</Text>
         <Card style={styles.menuCard}>
           <View style={styles.aboutRow}>
-            <Text style={styles.aboutLabel}>{'\u05D2\u05E8\u05E1\u05D4'}</Text>
+            <Text style={styles.aboutLabel}>גרסה</Text>
             <Text style={styles.aboutValue}>1.0.0</Text>
           </View>
           <View style={styles.menuDivider} />
           <View style={styles.aboutRow}>
-            <Text style={styles.aboutLabel}>{'\u05E4\u05DC\u05D8\u05E4\u05D5\u05E8\u05DE\u05D4'}</Text>
+            <Text style={styles.aboutLabel}>פלטפורמה</Text>
             <Text style={styles.aboutValue}>Expo SDK 54</Text>
           </View>
           <View style={styles.menuDivider} />
@@ -112,11 +112,11 @@ export function ProfileScreen({ navigation }: Props) {
         </Card>
 
         {/* Danger zone */}
-        <Text style={styles.sectionTitle}>{'\u05D7\u05E9\u05D1\u05D5\u05DF'}</Text>
+        <Text style={styles.sectionTitle}>חשבון</Text>
         <Card style={styles.menuCard}>
           <MenuItem
-            icon={'\uD83D\uDEAA'}
-            label={'\u05D4\u05EA\u05E0\u05EA\u05E7\u05D5\u05EA'}
+            icon="🚪"
+            label="התנתקות"
             onPress={() => logOut()}
             danger
           />
@@ -125,10 +125,10 @@ export function ProfileScreen({ navigation }: Props) {
         {/* Legal disclaimer */}
         <View style={styles.disclaimerWrap}>
           <Text style={styles.disclaimer}>
-            {'\uD83E\uDD16 \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1-AI \u05D5\u05D0\u05D9\u05E0\u05D4 \u05DE\u05D7\u05DC\u05D9\u05E4\u05D4 \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9.'}
+            🤖 האפליקציה משתמשת ב-AI ואינה מחליפה ייעוץ משפטי מקצועי.
           </Text>
           <Text style={styles.disclaimer}>
-            {'\u05DB\u05DC \u05D4\u05D6\u05DB\u05D5\u05D9\u05D5\u05EA \u05E9\u05DE\u05D5\u05E8\u05D5\u05EA \xA9 toviim.il'}
+            כל הזכויות שמורות © toviim.il
           </Text>
         </View>
       </ScrollView>

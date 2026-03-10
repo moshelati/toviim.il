@@ -47,7 +47,7 @@ export function DisclaimerScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" />
 
       <AppHeader
-        title={'\u05DC\u05E4\u05E0\u05D9 \u05E9\u05DE\u05EA\u05D7\u05D9\u05DC\u05D9\u05DD'}
+        title="לפני שמתחילים"
         onBack={() => navigation.goBack()}
       />
 
@@ -58,37 +58,37 @@ export function DisclaimerScreen({ navigation }: Props) {
       >
         {/* Warning banner */}
         <View style={styles.warningBanner}>
-          <Text style={styles.warningIcon}>{'\u26A0\uFE0F'}</Text>
-          <Text style={styles.warningTitle}>{'\u05D4\u05E6\u05D4\u05E8\u05D4 \u05DE\u05E9\u05E4\u05D8\u05D9\u05EA \u05D7\u05E9\u05D5\u05D1\u05D4'}</Text>
+          <Text style={styles.warningIcon}>⚠️</Text>
+          <Text style={styles.warningTitle}>הצהרה משפטית חשובה</Text>
           <Text style={styles.warningText}>
-            {'\u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05D4\u05D6\u05D5 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1\u05D1\u05D9\u05E0\u05D4 \u05DE\u05DC\u05D0\u05DB\u05D5\u05EA\u05D9\u05EA (AI) \u05DC\u05E6\u05D5\u05E8\u05DA \u05E1\u05D9\u05D5\u05E2 \u05D1\u05D4\u05DB\u05E0\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA.'}
+            האפליקציה הזו משתמשת בבינה מלאכותית (AI) לצורך סיוע בהכנת תביעות קטנות.
           </Text>
         </View>
 
         {/* Disclaimer box */}
         <View style={styles.disclaimerBox}>
-          <Text style={styles.disclaimerTitle}>{'\uD83D\uDCCB \u05DE\u05D4 \u05E9\u05D0\u05EA/\u05D4 \u05E6\u05E8\u05D9\u05DB/\u05D4 \u05DC\u05D3\u05E2\u05EA'}</Text>
+          <Text style={styles.disclaimerTitle}>📋 מה שאת/ה צריכ/ה לדעת</Text>
 
           {[
             {
-              icon: '\uD83E\uDD16',
-              title: '\u05D6\u05D4 \u05DC\u05D0 \u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF',
-              body: 'AI \u05D0\u05D9\u05E0\u05D5 \u05DE\u05D7\u05DC\u05D9\u05E3 \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9. \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05E2\u05D5\u05D6\u05E8\u05EA \u05DC\u05D0\u05E8\u05D2\u05DF \u05DE\u05D9\u05D3\u05E2, \u05D0\u05DA \u05D0\u05D9\u05E0\u05D4 \u05DE\u05E1\u05E4\u05E7\u05EA \u05D9\u05D9\u05E2\u05D5\u05E5 \u05DE\u05E9\u05E4\u05D8\u05D9 \u05DE\u05D7\u05D9\u05D9\u05D1.',
+              icon: '🤖',
+              title: 'זה לא עורך דין',
+              body: 'AI אינו מחליף ייעוץ משפטי מקצועי. האפליקציה עוזרת לארגן מידע, אך אינה מספקת ייעוץ משפטי מחייב.',
             },
             {
-              icon: '\u2696\uFE0F',
-              title: '\u05D0\u05D7\u05E8\u05D9\u05D5\u05EA \u05D0\u05D9\u05E9\u05D9\u05EA',
-              body: '\u05D0\u05EA\u05D4/\u05D0\u05EA \u05D0\u05D7\u05E8\u05D0\u05D9/\u05EA \u05DC\u05E0\u05DB\u05D5\u05E0\u05D5\u05EA \u05D4\u05DE\u05D9\u05D3\u05E2 \u05E9\u05EA\u05DE\u05E1\u05D5\u05E8/\u05D9. \u05D4\u05D2\u05E9\u05EA \u05DE\u05D9\u05D3\u05E2 \u05E9\u05D2\u05D5\u05D9 \u05D1\u05D1\u05D9\u05EA \u05DE\u05E9\u05E4\u05D8 \u05E2\u05DC\u05D5\u05DC\u05D4 \u05DC\u05D4\u05D9\u05D5\u05EA \u05D1\u05E2\u05D9\u05D9\u05EA\u05D9\u05EA.',
+              icon: '⚖️',
+              title: 'אחריות אישית',
+              body: 'אתה/את אחראי/ת לנכונות המידע שתמסור/י. הגשת מידע שגוי בבית משפט עלולה להיות בעייתית.',
             },
             {
-              icon: '\uD83D\uDD12',
-              title: '\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA \u05D4\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD',
-              body: '\u05E4\u05E8\u05D8\u05D9\u05DA \u05E0\u05E9\u05DE\u05E8\u05D9\u05DD \u05D1\u05E6\u05D5\u05E8\u05D4 \u05DE\u05D5\u05E6\u05E4\u05E0\u05EA \u05D1\u05E9\u05E8\u05EA\u05D9 Firebase. \u05D4\u05DE\u05D9\u05D3\u05E2 \u05DC\u05D0 \u05D9\u05D5\u05E2\u05D1\u05E8 \u05DC\u05E6\u05D3 \u05E9\u05DC\u05D9\u05E9\u05D9 \u05DC\u05DC\u05D0 \u05D4\u05E1\u05DB\u05DE\u05EA\u05DA.',
+              icon: '🔒',
+              title: 'פרטיות הנתונים',
+              body: 'פרטיך נשמרים בצורה מוצפנת בשרתי Firebase. המידע לא יועבר לצד שלישי ללא הסכמתך.',
             },
             {
-              icon: '\uD83D\uDCA1',
-              title: '\u05D4\u05D2\u05D1\u05DC\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA',
-              body: '\u05E9\u05D9\u05E8\u05D5\u05EA \u05EA\u05D1\u05D9\u05E2\u05D5\u05EA \u05E7\u05D8\u05E0\u05D5\u05EA \u05DE\u05D9\u05D5\u05E2\u05D3 \u05DC\u05E1\u05DB\u05D5\u05DE\u05D9\u05DD \u05E2\u05D3 38,800 \u20AA. \u05DE\u05E7\u05E8\u05D9\u05DD \u05DE\u05E2\u05D1\u05E8 \u05DC\u05DB\u05DA \u05D9\u05E9 \u05DC\u05D4\u05D2\u05D9\u05E9 \u05D1\u05D1\u05D9\u05EA \u05DE\u05E9\u05E4\u05D8 \u05E9\u05DC\u05D5\u05DD.',
+              icon: '💡',
+              title: 'הגבלת תביעות קטנות',
+              body: 'שירות תביעות קטנות מיועד לסכומים עד 38,800 ₪. מקרים מעבר לכך יש להגיש בבית משפט שלום.',
             },
           ].map((item, i) => (
             <View key={i} style={styles.infoRow}>
@@ -105,15 +105,15 @@ export function DisclaimerScreen({ navigation }: Props) {
         <Animated.View
           style={[styles.checkboxSection, { transform: [{ translateX: shakeAnim }] }]}
         >
-          <Text style={styles.checkboxTitle}>{'\u05D0\u05E0\u05D0 \u05D0\u05E9\u05E8/\u05D9 \u05D0\u05EA \u05DB\u05DC \u05D4\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD:'}</Text>
+          <Text style={styles.checkboxTitle}>אנא אשר/י את כל הסעיפים:</Text>
 
           <Checkbox
             checked={checked1}
             onToggle={() => setChecked1(!checked1)}
             label={
               <Text style={styles.checkboxLabel}>
-                <Text style={styles.checkboxLabelBold}>{'\u05D4\u05D1\u05E0\u05EA\u05D9: '}</Text>
-                {'\u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4 \u05DE\u05E9\u05EA\u05DE\u05E9\u05EA \u05D1-AI \u05D5\u05D0\u05D9\u05E0\u05D4 \u05DE\u05D7\u05DC\u05D9\u05E4\u05D4 \u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF. \u05D0\u05E0\u05D9 \u05DE\u05E9\u05EA\u05DE\u05E9/\u05EA \u05D1\u05E9\u05D9\u05E8\u05D5\u05EA \u05E2\u05DC \u05D0\u05D7\u05E8\u05D9\u05D5\u05EA\u05D9 \u05D4\u05D0\u05D9\u05E9\u05D9\u05EA.'}
+                <Text style={styles.checkboxLabelBold}>הבנתי: </Text>
+                האפליקציה משתמשת ב-AI ואינה מחליפה עורך דין. אני משתמש/ת בשירות על אחריותי האישית.
               </Text>
             }
           />
@@ -125,14 +125,14 @@ export function DisclaimerScreen({ navigation }: Props) {
             onToggle={() => setChecked2(!checked2)}
             label={
               <Text style={styles.checkboxLabel}>
-                {'\u05E7\u05E8\u05D0\u05EA\u05D9 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC'}
+                קראתי ואני מסכים/ה ל
                 <Text
                   style={styles.link}
                   onPress={() => navigation.navigate('Terms')}
                 >
-                  {'\u05EA\u05E0\u05D0\u05D9 \u05D4\u05E9\u05D9\u05E8\u05D5\u05EA'}
+                  תנאי השירות
                 </Text>
-                {' \u05E9\u05DC \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4.'}
+                {' '}של האפליקציה.
               </Text>
             }
           />
@@ -144,14 +144,14 @@ export function DisclaimerScreen({ navigation }: Props) {
             onToggle={() => setChecked3(!checked3)}
             label={
               <Text style={styles.checkboxLabel}>
-                {'\u05E7\u05E8\u05D0\u05EA\u05D9 \u05D5\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC'}
+                קראתי ואני מסכים/ה ל
                 <Text
                   style={styles.link}
                   onPress={() => navigation.navigate('Privacy')}
                 >
-                  {'\u05DE\u05D3\u05D9\u05E0\u05D9\u05D5\u05EA \u05D4\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA'}
+                  מדיניות הפרטיות
                 </Text>
-                {' \u05D5\u05DC\u05D0\u05D9\u05E1\u05D5\u05E3 \u05D4\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05D4\u05DE\u05EA\u05D5\u05D0\u05E8 \u05D1\u05D4.'}
+                {' '}ולאיסוף הנתונים המתואר בה.
               </Text>
             }
           />
@@ -164,18 +164,18 @@ export function DisclaimerScreen({ navigation }: Props) {
             label={
               <Text style={styles.checkboxLabel}>
                 <Text style={styles.checkboxLabelBold}>AI: </Text>
-                {'\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 \u05DC\u05E9\u05D9\u05DE\u05D5\u05E9 \u05D1\u05D1\u05D9\u05E0\u05D4 \u05DE\u05DC\u05D0\u05DB\u05D5\u05EA\u05D9\u05EA (AI) \u05DC\u05E2\u05D9\u05D1\u05D5\u05D3 \u05D4\u05DE\u05D9\u05D3\u05E2 \u05E9\u05D0\u05DE\u05E1\u05D5\u05E8, \u05D1\u05D4\u05EA\u05D0\u05DD \u05DC\u05DE\u05D3\u05D9\u05E0\u05D9\u05D5\u05EA \u05D4\u05E4\u05E8\u05D8\u05D9\u05D5\u05EA.'}
+                אני מסכים/ה לשימוש בבינה מלאכותית (AI) לעיבוד המידע שאמסור, בהתאם למדיניות הפרטיות.
               </Text>
             }
           />
         </Animated.View>
 
         {!allChecked && (
-          <Text style={styles.checkAllHint}>{'\u05D9\u05E9 \u05DC\u05E1\u05DE\u05DF \u05D0\u05EA \u05DB\u05DC \u05D4\u05EA\u05D9\u05D1\u05D5\u05EA \u05DB\u05D3\u05D9 \u05DC\u05D4\u05DE\u05E9\u05D9\u05DA'}</Text>
+          <Text style={styles.checkAllHint}>יש לסמן את כל התיבות כדי להמשיך</Text>
         )}
 
         <Button
-          label={'\u05D0\u05E0\u05D9 \u05DE\u05E1\u05DB\u05D9\u05DD/\u05D4 - \u05D1\u05D5\u05D0/\u05D9 \u05E0\u05EA\u05D7\u05D9\u05DC'}
+          label="אני מסכים/ה - בוא/י נתחיל"
           onPress={handleContinue}
           size="lg"
           disabled={!allChecked}
@@ -183,7 +183,7 @@ export function DisclaimerScreen({ navigation }: Props) {
         />
 
         <Text style={styles.footerNote}>
-          {'\u05D1\u05DC\u05D7\u05D9\u05E6\u05D4 \u05E2\u05DC \u05D4\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D0\u05EA\u05D4/\u05D0\u05EA \u05DE\u05D0\u05E9\u05E8/\u05EA \u05E9\u05E7\u05E8\u05D0\u05EA \u05D0\u05EA \u05DB\u05DC \u05D4\u05E1\u05E2\u05D9\u05E4\u05D9\u05DD \u05DC\u05E2\u05D9\u05DC.'}
+          בלחיצה על הכפתור אתה/את מאשר/ת שקראת את כל הסעיפים לעיל.
         </Text>
       </ScrollView>
     </View>

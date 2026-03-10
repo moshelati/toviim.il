@@ -18,6 +18,8 @@ import {
 import type { GeminiMessage } from '../../ai';
 import { getClaim, appendMessage, updateClaimMeta } from '../../lib/claimsService';
 import { calculateConfidence } from '../../engine/confidence';
+import { getOrCreateGraph, saveGraph } from '../../graph/storage';
+import { buildGraphFromClaim } from '../../graph/builder';
 import { ChatMessage } from '../../types/claim';
 import { Colors, Typography, Spacing, Radius, Shadows, SCREEN_PADDING } from '../../theme';
 import { AppHeader } from '../../components/ui/AppHeader';
@@ -78,15 +80,15 @@ export function ClaimChatScreen({ route, navigation }: Props) {
     if (err instanceof AIError) {
       setErrorSheet({
         visible: true,
-        title: '\u26A0\uFE0F \u05DC\u05D0 \u05D4\u05E6\u05DC\u05D7\u05EA\u05D9 \u05DC\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-AI',
+        title: '⚠️ לא הצלחתי להתחבר ל-AI',
         body: err.userMessage,
         retryable: err.retryable,
       });
     } else {
       setErrorSheet({
         visible: true,
-        title: '\u26A0\uFE0F \u05DC\u05D0 \u05D4\u05E6\u05DC\u05D7\u05EA\u05D9 \u05DC\u05D4\u05EA\u05D7\u05D1\u05E8 \u05DC-AI',
-        body: '\u05DE\u05E9\u05D4\u05D5 \u05D4\u05E9\u05EA\u05D1\u05E9. \u05E0\u05E1\u05D4/\u05D9 \u05E9\u05D5\u05D1.',
+        title: '⚠️ לא הצלחתי להתחבר ל-AI',
+        body: 'משהו השתבש. נסה/י שוב.',
         retryable: true,
       });
     }
@@ -96,7 +98,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
   useEffect(() => {
     (async () => {
       const claim = await getClaim(claimId);
-      const name = claim?.plaintiffName ?? user?.displayName ?? '\u05DE\u05E9\u05EA\u05DE\u05E9';
+      const name = claim?.plaintiffName ?? user?.displayName ?? 'משתמש';
       setPlaintiffName(name);
 
       if (claim?.messages?.length) {
@@ -110,7 +112,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
       try {
         const systemPrompt = buildInterviewSystemPrompt(claimType, name);
         const aiText = await sendMessage(
-          [{ role: 'user', parts: [{ text: '\u05D4\u05EA\u05D7\u05DC \u05D0\u05EA \u05D4\u05E8\u05D0\u05D9\u05D5\u05DF' }] }],
+          [{ role: 'user', parts: [{ text: 'התחל את הראיון' }] }],
           systemPrompt,
         );
         const opening: ChatMessage = { role: 'model', text: aiText, timestamp: Date.now() };
@@ -119,7 +121,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
       } catch (e) {
         const fallback: ChatMessage = {
           role: 'model',
-          text: `\u05E9\u05DC\u05D5\u05DD ${name}! \u05D0\u05E0\u05D9 \u05DB\u05D0\u05DF \u05DB\u05D3\u05D9 \u05DC\u05E2\u05D6\u05D5\u05E8 \u05DC\u05DA \u05DC\u05D1\u05E0\u05D5\u05EA \u05D0\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05E9\u05DC\u05DA.\n\n\u05E1\u05E4\u05E8/\u05D9 \u05DC\u05D9 \u2014 \u05DE\u05D4 \u05D1\u05D3\u05D9\u05D5\u05E7 \u05E7\u05E8\u05D4?`,
+          text: `שלום ${name}! אני כאן כדי לעזור לך לבנות את התביעה שלך.\n\nספר/י לי — מה בדיוק קרה?`,
           timestamp: Date.now(),
         };
         setMessages([fallback]);
@@ -136,6 +138,22 @@ export function ClaimChatScreen({ route, navigation }: Props) {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }
   }, [messages, isTyping]);
+
+  // ── Build/update CaseGraph from structured data ────────────────────────────
+  async function syncToGraph(structured: any) {
+    try {
+      // Update claim first so buildGraphFromClaim can read the latest data
+      const updatedClaim = await getClaim(claimId);
+      if (!updatedClaim) return;
+
+      // Build fresh graph from updated claim data
+      const graph = buildGraphFromClaim(updatedClaim);
+      await saveGraph(graph);
+    } catch (graphErr) {
+      console.error('Graph sync failed:', graphErr);
+      // Non-blocking — claim data is already saved
+    }
+  }
 
   // ── Send a user message ─────────────────────────────────────────────────────
   const handleSend = useCallback(async (retryMsg?: ChatMessage) => {
@@ -168,8 +186,8 @@ export function ClaimChatScreen({ route, navigation }: Props) {
 
       // Detect claim completion
       if (
-        aiText.includes('\u05D9\u05E9 \u05DC\u05D9 \u05DE\u05E1\u05E4\u05D9\u05E7 \u05DE\u05D9\u05D3\u05E2') ||
-        aiText.includes('\u05DB\u05EA\u05D1 \u05EA\u05D1\u05D9\u05E2\u05D4') ||
+        aiText.includes('יש לי מספיק מידע') ||
+        aiText.includes('כתב תביעה') ||
         finalMsgs.filter(m => m.role === 'user').length >= 10
       ) {
         setClaimDone(true);
@@ -211,6 +229,9 @@ export function ClaimChatScreen({ route, navigation }: Props) {
             missingFields: confidence.missingFields,
             suggestions: confidence.suggestions,
           });
+
+          // Phase 11: Sync extracted data to CaseGraph
+          await syncToGraph(structured);
         } catch (extractErr) {
           console.error('Structured extraction failed:', extractErr);
           await updateClaimMeta(claimId, {
@@ -236,7 +257,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
       <View style={[styles.bubbleWrap, isAI ? styles.bubbleWrapAI : styles.bubbleWrapUser]}>
         {isAI && (
           <View style={styles.aiAvatar}>
-            <Text style={styles.aiAvatarText}>{'\u2696\uFE0F'}</Text>
+            <Text style={styles.aiAvatarText}>⚖️</Text>
           </View>
         )}
         <View style={[
@@ -253,7 +274,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
             </Text>
             {isFailed && (
               <TouchableOpacity onPress={() => handleSend(item)} style={styles.retryBtn}>
-                <Text style={styles.retryText}>{'\u21BB'} נסה שוב</Text>
+                <Text style={styles.retryText}>↻ נסה שוב</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -262,20 +283,20 @@ export function ClaimChatScreen({ route, navigation }: Props) {
     );
   }
 
-  // ── Completion CTA ──────────────────────────────────────────────────────────
+  // ── Completion CTA — navigate to ClaimHub ─────────────────────────────────
   function renderDoneBanner() {
     return (
       <View style={styles.doneBanner}>
-        <Text style={styles.doneIcon}>{'\uD83C\uDF89'}</Text>
+        <Text style={styles.doneIcon}>🎉</Text>
         <Text style={styles.doneTitle}>הראיון הושלם!</Text>
         <Text style={styles.doneSub}>עכשיו ניתן לבדוק את ציון המוכנות, להוסיף ראיות ולייצר כתב תביעה</Text>
         <PrimaryButton
-          title={'\uD83D\uDCCA בדוק ציון מוכנות'}
-          onPress={() => navigation.navigate('Confidence', { claimId })}
+          title="📊 המשך למרכז התביעה"
+          onPress={() => navigation.navigate('ClaimHub', { claimId })}
           style={{ marginBottom: Spacing.sm }}
         />
         <SecondaryButton
-          title={'\uD83D\uDCC4 המשך לכתב תביעה'}
+          title="📄 צפה בכתב תביעה"
           onPress={() => navigation.navigate('ClaimDetail', { claimId })}
         />
       </View>
@@ -314,7 +335,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
                 {isTyping && (
                   <View style={[styles.bubbleWrap, styles.bubbleWrapAI]}>
                     <View style={styles.aiAvatar}>
-                      <Text style={styles.aiAvatarText}>{'\u2696\uFE0F'}</Text>
+                      <Text style={styles.aiAvatarText}>⚖️</Text>
                     </View>
                     <View style={[styles.bubble, styles.bubbleAI, styles.typingBubble]}>
                       <View style={styles.typingRow}>
@@ -353,7 +374,7 @@ export function ClaimChatScreen({ route, navigation }: Props) {
               disabled={!inputText.trim() || isTyping}
               activeOpacity={0.8}
             >
-              <Text style={styles.sendIcon}>{'\u2B06'}</Text>
+              <Text style={styles.sendIcon}>⬆</Text>
             </TouchableOpacity>
           </View>
         )}
